@@ -83,13 +83,12 @@ def draw_world(world,winobj,tick, pos):
             block_rotation = tile["rotation"]
             block_part = tile["part"]
             block_building = tile["building"]
-            if x >= 20: x1 = x -20
-            else: x1 = x
-            if y >= 20: y1 = y - 20
-            else: y1 = y
-            print(y_borders[0], y1 + abs(y_borders[0]))
-            if x_borders[0] < 0: x1 + abs(x_borders[0])
-            if y_borders[0] < 0: y1 + abs(y_borders[0])
+            x1 = x
+            y1 = y
+            if x_borders[0] < 0: x1 += abs(x_borders[0])
+            else: x1 -= x_borders[0]
+            if y_borders[0] < 0: y1 += abs(y_borders[0])
+            else: y1 -= y_borders[0]
             winobj.blit(pg.transform.scale(stone,(30,30)),(x1*30,y1*30))
             if block == "coal_ore":
                 winobj.blit(pg.transform.scale(ores[-1],(30,30)),(x1*30,y1*30))

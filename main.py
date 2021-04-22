@@ -75,7 +75,7 @@ def draw_world(world,winobj,tick, pos):
     x_borders = [pos[0]-10,pos[0]+10]
     y_borders = [pos[1]-10,pos[1]+10]
     for tile_id, tile in enumerate(world):
-        if x == 20:
+        if x == 40:
             x = 0
             y+=1
         if y >= y_borders[0] and y <= y_borders[1] :
@@ -123,8 +123,9 @@ while 1:
         elif i.type == pg.KEYDOWN:
             if i.key == pg.K_UP and pos[1] != 0:
                 pos[1] -= 1
-            elif i.key == pg.K_DOWN and pos[1] != 41:
+            elif i.key == pg.K_DOWN and pos[1] != 40:
                 pos[1] += 1
+                print(pos[1])
     pg.display.update()
     clock.tick(45)
     tick += 1

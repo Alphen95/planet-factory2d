@@ -1,7 +1,0 @@
-[INFO] program started, time: 2021-04-21 10:35:58
-[DEBUG] placed coal ore in x:19 y:9, time:2021-04-21 10:35:59
-[DEBUG] placed coal ore in x:13 y:5, time:2021-04-21 10:35:59
-[DEBUG] placed iron ore in x:20 y:16, time:2021-04-21 10:35:59
-[DEBUG] placed copper ore in x:5 y:9, time:2021-04-21 10:35:59
-[DEBUG] placed tin ore in x:19 y:11, time:2021-04-21 10:35:59
-[DEBUG] placed zinc ore in x:0 y:5, time:2021-04-21 10:35:59

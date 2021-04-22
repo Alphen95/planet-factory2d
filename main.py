@@ -1,6 +1,7 @@
 import pygame as pg
 import sys, random, os, datetime
 
+os.makedirs("logs",exist_ok=True)
 log_file = open(os.path.join("logs","log-{}.txt".format(str(datetime.datetime.now())[:-7])),"w+")
 log_file.write("[INFO] program started, time: {}\n".format(str(datetime.datetime.now())[:-7]))
 

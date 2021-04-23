@@ -152,7 +152,8 @@ while 1:
                     for y1 in range(y_borders[0],y_borders[1]):
                         true_visible_part.append(visible_part[str(x1)+"_"+str(y1)])
                 print(true_visible_part)
-                print(true_visible_part[x+(y*10)])
+                print(x,y)
+                print(true_visible_part[x+(y*20)])
         elif i.type == pg.KEYDOWN:
             if i.key == pg.K_UP and pos[1] != 0:
                 pos[1] -= 1

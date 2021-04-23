@@ -42,22 +42,22 @@ world = []
 for i in range(0,1600):
     world.append({"item":None,"building":None, "tile":None,"part":0,"rotation":0})
 
-for i in range(0, 12):
-    x = random.randint(0,20)
-    y = random.randint(0,20)    
-    if i == 0 or i == 1 or i == 6 or i == 7:
+for i in range(0, 18):
+    x = random.randint(0,40)
+    y = random.randint(0,40)    
+    if i == 0 or i == 1 or i == 6 or i == 7 or i == 12 or i == 13:
         world[x+y*10] = {"item":None,"building":None,"tile":"coal_ore","part":0,"rotation":0}
         log_file.write("[DEBUG] placed coal ore in x:{0} y:{1}, time:{2}\n".format(x,y,str(datetime.datetime.now())[:-7]))
-    elif i == 2 or i == 8:
+    elif i == 2 or i == 8 or i == 14:
         world[x+y*10] = {"item":None,"building":None,"tile":"iron_ore","part":0,"rotation":0}
         log_file.write("[DEBUG] placed iron ore in x:{0} y:{1}, time:{2}\n".format(x,y,str(datetime.datetime.now())[:-7]))
-    elif i == 3 or i == 9:
+    elif i == 3 or i == 9 or i == 15:
         world[x+y*10] = {"item":None,"building":None,"tile":"copper_ore","part":0,"rotation":0}
         log_file.write("[DEBUG] placed copper ore in x:{0} y:{1}, time:{2}\n".format(x,y,str(datetime.datetime.now())[:-7]))
-    elif i == 4 or i == 10:
+    elif i == 4 or i == 10 or i == 16:
         world[x+y*10] = {"item":None,"building":None,"tile":"tin_ore","part":0,"rotation":0}
         log_file.write("[DEBUG] placed tin ore in x:{0} y:{1}, time:{2}\n".format(x,y,str(datetime.datetime.now())[:-7]))
-    elif i == 5 or i == 11:
+    elif i == 5 or i == 11 or i == 17:
         world[x+y*10] = {"item":None,"building":None,"tile":"zinc_ore","part":0,"rotation":0}
         log_file.write("[DEBUG] placed zinc ore in x:{0} y:{1}, time:{2}\n".format(x,y,str(datetime.datetime.now())[:-7]))
 
@@ -77,7 +77,7 @@ def draw_world(world,winobj,tick, pos):
         if x == 40:
             x = 0
             y+=1
-        if y >= y_borders[0] and y <= y_borders[1] :
+        if y >= y_borders[0] and y <= y_borders[1] and x >= x_borders[0] and x<= x_borders[1]:
             block = tile["tile"]
             block_rotation = tile["rotation"]
             block_part = tile["part"]
@@ -126,6 +126,33 @@ while 1:
         if i.type == pg.QUIT:
             pg.quit()
             sys.exit()
+        elif i.type == pg.MOUSEBUTTONDOWN:
+            coords = i.pos
+            if i.button == 2:
+                #tooltip on middle-click
+                x = int(coords[0]/30)
+                y = int(coords[1]/30)
+                x2= 0
+                y2= 0
+                x_borders = [pos[0]-10,pos[0]+10]
+                y_borders = [pos[1]-10,pos[1]+10]
+                visible_part = {}
+                for x1 in range(x_borders[0],x_borders[1]):
+                    for y1 in range(y_borders[0],y_borders[1]):
+                        visible_part[str(x1)+"_"+str(y1)] = {}
+                for i in range(0,1600):
+                    if x2 == 40:
+                        x2 = 0
+                        y2 += 1
+                    if x2 >= x_borders[0] and x2 <= x_borders[1] and y2 >= y_borders[0] and y2 <= y_borders[1]:
+                        visible_part[str(x2)+"_"+str(y2)] = world[i]
+                    x2 += 1
+                true_visible_part = []
+                for x1 in range(x_borders[0],x_borders[1]):
+                    for y1 in range(y_borders[0],y_borders[1]):
+                        true_visible_part.append(visible_part[str(x1)+"_"+str(y1)])
+                print(true_visible_part)
+                print(true_visible_part[x+(y*10)])
         elif i.type == pg.KEYDOWN:
             if i.key == pg.K_UP and pos[1] != 0:
                 pos[1] -= 1

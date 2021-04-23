@@ -36,8 +36,6 @@ clock = pg.time.Clock()
 pg.init()
 font = pg.font.SysFont("Verdana",12)
 pos = [0,0]
-state = "stand"
-rotation = 0
 
 #world define
 world = []
@@ -107,7 +105,14 @@ def draw_world(world,winobj,tick, pos):
                 elif block_part == 2:
                     winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["drill"][1],block_rotation),(30,30)),(x1*30,y1*30))
             elif block_building == "conveyor_belt":
-                winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["conveyor"][0],block_rotation),(30,30)),(x1*30,y1*30))
+                if tick <= 11:
+                    winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["conveyor"][0],block_rotation),(30,30)),(x1*30,y1*30))
+                elif tick <= 22:
+                    winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["conveyor"][1],block_rotation),(30,30)),(x1*30,y1*30))
+                elif tick <= 33:
+                    winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["conveyor"][2],block_rotation),(30,30)),(x1*30,y1*30))
+                elif tick <= 44:
+                    winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["conveyor"][3],block_rotation),(30,30)),(x1*30,y1*30))
         
         x+=1
 
@@ -126,6 +131,11 @@ while 1:
                 pos[1] -= 1
             elif i.key == pg.K_DOWN and pos[1] != 40:
                 pos[1] += 1
+                print(pos[1])
+            elif i.key == pg.K_LEFT and pos[0] != 0:
+                pos[0] -= 1
+            elif i.key == pg.K_RIGHT and pos[0] != 40:
+                pos[0] += 1
                 print(pos[1])
     pg.display.update()
     clock.tick(45)

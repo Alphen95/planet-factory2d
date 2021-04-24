@@ -1,5 +1,6 @@
 import pygame as pg
 import sys, random, os, datetime
+from pprint import pprint
 
 os.makedirs("logs",exist_ok=True)
 log_file = open(os.path.join("logs","log-{}.txt".format(str(datetime.datetime.now())[:-7])),"w+")
@@ -130,8 +131,8 @@ while 1:
             coords = i.pos
             if i.button == 2:
                 #tooltip on middle-click
-                x = int(coords[0]/30)
-                y = int(coords[1]/30)
+                x = int(coords[1]/30)
+                y = int(coords[0]/30)
                 x2= 0
                 y2= 0
                 x_borders = [pos[0]-10,pos[0]+10]
@@ -151,9 +152,6 @@ while 1:
                 for x1 in range(x_borders[0],x_borders[1]):
                     for y1 in range(y_borders[0],y_borders[1]):
                         true_visible_part.append(visible_part[str(x1)+"_"+str(y1)])
-                print(true_visible_part)
-                print(x,y)
-                print(true_visible_part[x+(y*20)])
         elif i.type == pg.KEYDOWN:
             if i.key == pg.K_UP and pos[1] != 0:
                 pos[1] -= 1

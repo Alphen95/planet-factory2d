@@ -14,6 +14,10 @@ ores = [
     pg.image.load(os.path.join("res","ore_coal.png"))
 ]
 
+ui = [
+    pg.image.load(os.path.join("res","tooltip_box.png"))
+]
+
 buildings = {
     "drill":[
         pg.image.load(os.path.join("res","drill_part1.png")),
@@ -29,6 +33,8 @@ buildings = {
 
 stone = pg.image.load(os.path.join("res","stone.png"))
 tick = 0
+tooltip_tick = -1
+tooltip_tile = {}
 
 screen_size = (600,600)
 
@@ -66,7 +72,7 @@ world[0] = {"item":None,"building":"drill","tile":"coal_ore","part":1,"rotation"
 world[1] = {"item":None,"building":"drill","tile":None,"part":2,"rotation":0}
 world[2] = {"item":None,"building":"conveyor_belt","tile":None,"part":0,"rotation":0}
 
-def draw_world(world,winobj,tick, pos):
+def draw_world(world,winobj,tick, pos,tooltip_props):
     winobj.fill((25,25,25))
     x = 0
     x1 = 0
@@ -114,14 +120,25 @@ def draw_world(world,winobj,tick, pos):
                     winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["conveyor"][2],block_rotation),(30,30)),(x1*30,y1*30))
                 elif tick <= 44:
                     winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["conveyor"][3],block_rotation),(30,30)),(x1*30,y1*30))
-        
         x+=1
+    if tooltip_props[0] != -1:
+        ypos = 0
+        if tooltip_props[0] >= 104:
+            ypos = 3*(104-tooltip_props[0])
+        if tooltip_props[0] <= 20:
+            ypos = -60+tooltip_props[0]*3
+        winobj.blit(pg.transform.scale(pg.transform.rotate(ui[0],0),(160,60)),(7*30+10,ypos))
+        
 
 #main cycle
 while 1:
     if tick == 45:
         tick = 0
-    draw_world(world,window,tick,pos)
+    if tooltip_tick != -1:
+        tooltip_tick -= 1
+    elif tooltip_tick == -1:
+        tooltip_tile = {}
+    draw_world(world,window,tick,pos,[tooltip_tick,tooltip_tile])
     #print(a)
     for i in pg.event.get():
         if i.type == pg.QUIT:
@@ -152,6 +169,8 @@ while 1:
                 for x1 in range(x_borders[0],x_borders[1]):
                     for y1 in range(y_borders[0],y_borders[1]):
                         true_visible_part.append(visible_part[str(x1)+"_"+str(y1)])
+                tooltip_tile = true_visible_part[x+y*20]
+                tooltip_tick = 125
         elif i.type == pg.KEYDOWN:
             if i.key == pg.K_UP and pos[1] != 0:
                 pos[1] -= 1

@@ -121,13 +121,49 @@ def draw_world(world,winobj,tick, pos,tooltip_props):
                 elif tick <= 44:
                     winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["conveyor"][3],block_rotation),(30,30)),(x1*30,y1*30))
         x+=1
-    if tooltip_props[0] != -1:
+    if tooltip_props[0] != -1 and tooltip_props[1] != {}:
+        block = tooltip_props[1]["tile"]
+        block_rotation = tooltip_props[1]["rotation"]
+        block_part =tooltip_props[1]["part"]
+        block_building =tooltip_props[1]["building"]
+        block_item =tooltip_props[1]["item"]
         ypos = 0
+        xpos = 7*30
         if tooltip_props[0] >= 104:
             ypos = 3*(104-tooltip_props[0])
         if tooltip_props[0] <= 20:
             ypos = -60+tooltip_props[0]*3
         winobj.blit(pg.transform.scale(pg.transform.rotate(ui[0],0),(160,60)),(7*30+10,ypos))
+        text_tile = font.render("Tile:{}".format(block),True,(0,0,0))
+        text_build = font.render("Building:{}".format(block_building),True,(0,0,0))
+        text_item = font.render("Item:{}".format(block_item),True,(0,0,0))
+        winobj.blit(text_tile,(xpos+55,ypos+5))
+        winobj.blit(text_build,(xpos+55,ypos+17))
+        winobj.blit(text_item,(xpos+55,ypos+30))
+        if block == "coal_ore":
+            winobj.blit(pg.transform.scale(ores[-1],(30,30)),(xpos+20,ypos+10))
+        elif block == "iron_ore":
+            winobj.blit(pg.transform.scale(ores[0],(30,30)),(xpos+20,ypos+10))
+        elif block == "copper_ore":
+            winobj.blit(pg.transform.scale(ores[1],(30,30)),(xpos+20,ypos+10))
+        elif block == "zinc_ore":
+            winobj.blit(pg.transform.scale(ores[2],(30,30)),(xpos+20,ypos+10))
+        elif block == "tin_ore":
+            winobj.blit(pg.transform.scale(ores[3],(30,30)),(xpos+20,ypos+10))
+        if block_building == "drill":
+            if block_part == 1:
+                winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["drill"][0],block_rotation),(30,30)),(xpos+20,ypos+10))
+            elif block_part == 2:
+                winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["drill"][1],block_rotation),(30,30)),(xpos+20,ypos+10))
+        elif block_building == "conveyor_belt":
+            if tick <= 11:
+                winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["conveyor"][0],block_rotation),(30,30)),(xpos+20,ypos+10))
+            elif tick <= 22:
+                winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["conveyor"][1],block_rotation),(30,30)),(xpos+20,ypos+10))
+            elif tick <= 33:
+                winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["conveyor"][2],block_rotation),(30,30)),(xpos+20,ypos+10))
+            elif tick <= 44:
+                winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["conveyor"][3],block_rotation),(30,30)),(xpos+20,ypos+10))        
         
 
 #main cycle
@@ -139,7 +175,6 @@ while 1:
     elif tooltip_tick == -1:
         tooltip_tile = {}
     draw_world(world,window,tick,pos,[tooltip_tick,tooltip_tile])
-    #print(a)
     for i in pg.event.get():
         if i.type == pg.QUIT:
             pg.quit()
@@ -170,18 +205,16 @@ while 1:
                     for y1 in range(y_borders[0],y_borders[1]):
                         true_visible_part.append(visible_part[str(x1)+"_"+str(y1)])
                 tooltip_tile = true_visible_part[x+y*20]
-                tooltip_tick = 125
+                tooltip_tick = 125                    
         elif i.type == pg.KEYDOWN:
             if i.key == pg.K_UP and pos[1] != 0:
                 pos[1] -= 1
             elif i.key == pg.K_DOWN and pos[1] != 40:
                 pos[1] += 1
-                print(pos[1])
             elif i.key == pg.K_LEFT and pos[0] != 0:
                 pos[0] -= 1
             elif i.key == pg.K_RIGHT and pos[0] != 40:
                 pos[0] += 1
-                print(pos[1])
     pg.display.update()
     clock.tick(45)
     tick += 1

@@ -24,6 +24,20 @@ ui = [
     pg.image.load(os.path.join("res","tooltip_box.png"))
 ]
 
+processed_ores = {
+    "ingot":[
+        pg.image.load(os.path.join("res","ingot_iron.png")) ,
+        pg.image.load(os.path.join("res","ingot_copper.png")) ,
+        pg.image.load(os.path.join("res","ingot_iron.png")) ,
+        pg.image.load(os.path.join("res","ingot_iron.png")) ,
+        pg.image.load(os.path.join("res","ingot_iron.png")) ,
+        pg.image.load(os.path.join("res","ingot_iron.png")) ,
+        pg.image.load(os.path.join("res","ingot_iron.png")) ,
+        pg.image.load(os.path.join("res","ingot_iron.png")) 
+        
+    ]
+}
+
 buildings = {
     "drill":[
         pg.image.load(os.path.join("res","drill_part1.png")),

@@ -8,7 +8,7 @@ log_file.write("[INFO] program started, time: {}\n".format(str(datetime.datetime
 parser = argparse.ArgumentParser(description='Satisfactorey demake on Python. These options are fully extra.')
 parser.add_argument("--size",type=int,help="Changes the field size (default = 40). WARNING: Larger sizes make the world generate longer.")
 parser.add_argument("--cell",type=int,help="Changes the cell size (default = 30).")
-
+SPECIAL_YELLOW = (220,184,10)
 
 
 ui = [
@@ -78,7 +78,7 @@ tooltip_tick = -1
 tooltip_tile = {}
 menu = "hidden"
 menu_tick = 0
-inventory = []
+inventory = [{"item":("ingot","copper"),"amount":64},{"item":("ingot","iron"),"amount":64},{"item":("unprocessed","tungsten"),"amount":64}]
 current_item = ["drill",90]
 mode = "building"
 power_capacity = 0
@@ -303,10 +303,19 @@ def draw_world(world,winobj,tick, pos,tooltip_props, menu_props,edit_mode):
         ypos = 0
         xpos = 0
         if menu_props[1] == "opening" or menu_props[1] == "open":
-            xpos = menu_props[0]*cell_size
+            xpos = menu_props[0]*(cell_size/2)
         elif menu_props[1] == "closing" or menu_props[1] == "hidden":
-            xpos = screen_size[0] - menu_props[0]*cell_size
-        pg.draw.polygon(winobj,(220,184,10),[[xpos,ypos],[xpos+screen_size[0],ypos],[xpos+screen_size[0],ypos+screen_size[1]-70],[xpos, ypos+screen_size[1]-70]])
+            xpos = screen_size[0] - menu_props[0]*(cell_size/2)
+        pg.draw.polygon(winobj,(0,0,0),[[xpos,ypos],[xpos+screen_size[0]+10,ypos],[xpos+screen_size[0]+10,ypos+screen_size[1]-70],[xpos, ypos+screen_size[1]-70]])
+        pg.draw.polygon(winobj,SPECIAL_YELLOW,[[xpos+5,ypos+5],[xpos+screen_size[0]+10,ypos+5],[xpos+screen_size[0]+10,ypos+screen_size[1]-75],[xpos+5, ypos+screen_size[1]-75]])
+        for y in range(0,2):
+            for x in range(0,9):
+                try:
+                    item = inventory[x+y*10]["item"]
+                    item_amount = inventory[x+y*10]["amount"]
+                    winobj.blit(pg.transform.scale(resources[item[0]][item[1]],(cell_size*2,cell_size*2)),(xpos+10*x+(cell_size*2)*x,ypos+10*y+(cell_size*2)*y))
+                except:pass
+                
         
         
 
@@ -437,10 +446,10 @@ while 1:
                 current_item[1] = 0
     if keys[pg.K_e] and menu == "hidden":
         menu = "opening"
-        menu_tick = 20
+        menu_tick = 40
     elif keys[pg.K_e] and menu == "open":
         menu = "closing"
-        menu_tick = 20
+        menu_tick = 40
     if pos[0] >= world_len: pos[0] = world_len-1
     elif pos[0] < 0: pos[0] = 0
     if pos[1] >= world_len: pos[1] = world_len-1

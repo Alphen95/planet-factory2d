@@ -9,55 +9,68 @@ parser = argparse.ArgumentParser(description='Satisfactorey demake on Python. Th
 parser.add_argument("--size",type=int,help="Changes the field size (default = 40). WARNING: Larger sizes make the world generate longer.")
 parser.add_argument("--cell",type=int,help="Changes the cell size (default = 30).")
 
-ores = [
-    pg.image.load(os.path.join("res","ore_iron.png")),
-    pg.image.load(os.path.join("res","ore_copper.png")),
-    pg.image.load(os.path.join("res","ore_zinc.png")),
-    pg.image.load(os.path.join("res","ore_tin.png")),
-    pg.image.load(os.path.join("res","ore_kelp.png")), 
-    pg.image.load(os.path.join("res","leaves.png")),
-    pg.image.load(os.path.join("res","ore_tungsten.png")),
-    pg.image.load(os.path.join("res","ore_coal.png"))
-]
+
 
 ui = [
     pg.image.load(os.path.join("res","tooltip_box.png"))
 ]
 
-processed_ores = {
-    "ingot":[
-        pg.image.load(os.path.join("res","ingot_iron.png")) ,
-        pg.image.load(os.path.join("res","ingot_copper.png")) ,
-        pg.image.load(os.path.join("res","ingot_iron.png")) ,
-        pg.image.load(os.path.join("res","ingot_iron.png")) ,
-        pg.image.load(os.path.join("res","ingot_iron.png")) ,
-        pg.image.load(os.path.join("res","ingot_iron.png")) ,
-        pg.image.load(os.path.join("res","ingot_iron.png")) ,
-        pg.image.load(os.path.join("res","ingot_iron.png")) 
-        
-    ]
+resources= {
+    "ingot":{
+        "iron":pg.image.load(os.path.join("res","resources","ingot","iron.png")) ,
+        "copper":pg.image.load(os.path.join("res","resources","ingot","copper.png")) ,
+        "zinc":pg.image.load(os.path.join("res","resources","ingot","zinc.png")) ,
+        "tin":pg.image.load(os.path.join("res","resources","ingot","tin.png")) ,
+        "kelp":pg.image.load(os.path.join("res","resources","ingot","kelp.png")) ,
+        "leaves":pg.image.load(os.path.join("res","resources","ingot","leaves.png")) ,
+        "tungsten":pg.image.load(os.path.join("res","resources","ingot","tungsten.png")) ,
+        "coal":pg.image.load(os.path.join("res","resources","ingot","coal.png")), 
+        "bronze":pg.image.load(os.path.join("res","resources","ingot","bronze.png")), 
+        "brass":pg.image.load(os.path.join("res","resources","ingot","brass.png")), 
+        "composite":pg.image.load(os.path.join("res","resources","ingot","composite.png"))
+    },
+    "raw_ore":{
+        "iron":pg.image.load(os.path.join("res","ores","iron.png")),
+        "copper":pg.image.load(os.path.join("res","ores","copper.png")),
+        "zinc":pg.image.load(os.path.join("res","ores","zinc.png")),
+        "tin":pg.image.load(os.path.join("res","ores","tin.png")),
+        "kelp":pg.image.load(os.path.join("res","ores","kelp.png")), 
+        "leaves":pg.image.load(os.path.join("res","ores","leaves.png")),
+        "tungsten":pg.image.load(os.path.join("res","ores","tungsten.png")),
+        "coal":pg.image.load(os.path.join("res","ores","coal.png"))        
+    },
+    "unprocessed":{
+        "iron":pg.image.load(os.path.join("res","unprocessed","iron.png")) ,
+        "copper":pg.image.load(os.path.join("res","unprocessed","copper.png")) ,
+        "zinc":pg.image.load(os.path.join("res","unprocessed","zinc.png")) ,
+        "tin":pg.image.load(os.path.join("res","unprocessed","tin.png")) ,
+        "kelp":pg.image.load(os.path.join("res","unprocessed","kelp.png")) ,
+        "leaves":pg.image.load(os.path.join("res","unprocessed","leaves.png")) ,
+        "tungsten":pg.image.load(os.path.join("res","unprocessed","tungsten.png")) ,
+        "coal":pg.image.load(os.path.join("res","unprocessed","coal.png")) 
+    }
 }
 
 buildings = {
     "drill":[
-        pg.image.load(os.path.join("res","drill_part1.png")),
-        pg.image.load(os.path.join("res","drill_part2.png"))
+        pg.image.load(os.path.join("res","buildings","drill_part1.png")),
+        pg.image.load(os.path.join("res","buildings","drill_part2.png"))
     ],
     "conveyor":[
-        pg.image.load(os.path.join("res","conveyor_belt0.png")) ,
-        pg.image.load(os.path.join("res","conveyor_belt1.png")) , 
-        pg.image.load(os.path.join("res","conveyor_belt2.png")) ,
-        pg.image.load(os.path.join("res","conveyor_belt3.png")) 
+        pg.image.load(os.path.join("res","buildings","conveyor_belt0.png")) ,
+        pg.image.load(os.path.join("res","buildings","conveyor_belt1.png")) , 
+        pg.image.load(os.path.join("res","buildings","conveyor_belt2.png")) ,
+        pg.image.load(os.path.join("res","buildings","conveyor_belt3.png")) 
     ],
     "biomass_burner":[
-        pg.image.load(os.path.join("res","biomass_burner.png")) 
+        pg.image.load(os.path.join("res","buildings","biomass_burner.png")) 
     ]
 }
 
 ground_tiles = [
-    pg.image.load(os.path.join("res","stone.png")),
-    pg.image.load(os.path.join("res","water.png")),
-    pg.image.load(os.path.join("res","grass.png"))
+    pg.image.load(os.path.join("res","ground_tiles","stone.png")),
+    pg.image.load(os.path.join("res","ground_tiles","water.png")),
+    pg.image.load(os.path.join("res","ground_tiles","grass.png"))
 ]
 
 tick = 0
@@ -160,8 +173,8 @@ if int(world_len / 100) > 0:
                     world[(x+i)+((y+i1)*world_len)] = {"item":None,"building":None,"tile":"kelp","part":0,"rotation":0}        
 
 world[0] = {"item":None,"building":"drill","tile":"coal_ore","part":1,"rotation":0}
-world[1] = {"item":None,"building":"drill","tile":None,"part":2,"rotation":0}
-world[2] = {"item":None,"building":"conveyor_belt","tile":None,"part":0,"rotation":0}
+world[1] = {"item":None,"building":"drill","tile":"stone","part":2,"rotation":0}
+world[2] = {"item":None,"building":"conveyor_belt","tile":"stone","part":0,"rotation":0}
 
 def draw_world(world,winobj,tick, pos,tooltip_props, menu_props,edit_mode):
     winobj.fill((25,25,25))
@@ -186,28 +199,29 @@ def draw_world(world,winobj,tick, pos,tooltip_props, menu_props,edit_mode):
             else: x1 -= x_borders[0]
             if y_borders[0] < 0: y1 += abs(y_borders[0])
             else: y1 -= y_borders[0]
-            winobj.blit(pg.transform.scale(ground_tiles[0],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))
-            if block == "coal_ore":
-                winobj.blit(pg.transform.scale(ores[-1],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))
+            if block == "stone":
+                winobj.blit(pg.transform.scale(ground_tiles[0],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))
+            elif block == "coal_ore":
+                winobj.blit(pg.transform.scale(resources["raw_ore"]["coal"],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))
             elif block == "iron_ore":
-                winobj.blit(pg.transform.scale(ores[0],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))
+                winobj.blit(pg.transform.scale(resources["raw_ore"]["iron"],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))
             elif block == "copper_ore":
-                winobj.blit(pg.transform.scale(ores[1],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))
+                winobj.blit(pg.transform.scale(resources["raw_ore"]["copper"],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))
             elif block == "zinc_ore":
-                winobj.blit(pg.transform.scale(ores[2],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))
+                winobj.blit(pg.transform.scale(resources["raw_ore"]["zinc"],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))
             elif block == "tin_ore":
-                winobj.blit(pg.transform.scale(ores[3],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))
+                winobj.blit(pg.transform.scale(resources["raw_ore"]["tin"],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))
             elif block == "tungsten_ore":
-                winobj.blit(pg.transform.scale(ores[6],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))                
+                winobj.blit(pg.transform.scale(resources["raw_ore"]["tungsten"],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))                
             elif block == "kelp":
-                winobj.blit(pg.transform.scale(ores[4],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))  
+                winobj.blit(pg.transform.scale(resources["raw_ore"]["kelp"],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))  
             elif block == "water":
                 winobj.blit(pg.transform.scale(ground_tiles[1],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))              
             elif block == "grass":
                 winobj.blit(pg.transform.scale(ground_tiles[2],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))
             elif block == "leaves":
                 winobj.blit(pg.transform.scale(ground_tiles[2],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))
-                winobj.blit(pg.transform.scale(ores[5],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))
+                winobj.blit(pg.transform.scale(resources["raw_ore"]["leaves"],(cell_size,cell_size)),(x1*cell_size,y1*cell_size))
             if block_building == "drill":
                 if block_part == 1:
                     winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["drill"][0],block_rotation),(cell_size,cell_size)),(x1*cell_size,y1*cell_size))
@@ -242,27 +256,29 @@ def draw_world(world,winobj,tick, pos,tooltip_props, menu_props,edit_mode):
         winobj.blit(text_tile,(xpos+25+cell_size,ypos+5))
         winobj.blit(text_build,(xpos+25+cell_size,ypos+17))
         winobj.blit(text_item,(xpos+25+cell_size,ypos+30))
-        if block == "coal_ore":
-            winobj.blit(pg.transform.scale(ores[-1],(cell_size,cell_size)),(xpos+20,ypos+10))
+        if block == "stone":
+            winobj.blit(pg.transform.scale(ground_tiles[0],(cell_size,cell_size)),(xpos+20,ypos+10))
+        elif block == "coal_ore":
+            winobj.blit(pg.transform.scale(resources["raw_ore"]["coal"],(cell_size,cell_size)),(xpos+20,ypos+10))
         elif block == "iron_ore":
-            winobj.blit(pg.transform.scale(ores[0],(cell_size,cell_size)),(xpos+20,ypos+10))
+            winobj.blit(pg.transform.scale(resources["raw_ore"]["iron"],(cell_size,cell_size)),(xpos+20,ypos+10))
         elif block == "copper_ore":
-            winobj.blit(pg.transform.scale(ores[1],(cell_size,cell_size)),(xpos+20,ypos+10))
+            winobj.blit(pg.transform.scale(resources["raw_ore"]["copper"],(cell_size,cell_size)),(xpos+20,ypos+10))
         elif block == "zinc_ore":
-            winobj.blit(pg.transform.scale(ores[2],(cell_size,cell_size)),(xpos+20,ypos+10))
+            winobj.blit(pg.transform.scale(resources["raw_ore"]["zinc"],(cell_size,cell_size)),(xpos+20,ypos+10))
         elif block == "tin_ore":
-            winobj.blit(pg.transform.scale(ores[3],(cell_size,cell_size)),(xpos+20,ypos+10))
-        elif block == "kelp":
-            winobj.blit(pg.transform.scale(ores[4],(cell_size,cell_size)),(xpos+20,ypos+10))  
+            winobj.blit(pg.transform.scale(resources["raw_ore"]["tin"],(cell_size,cell_size)),(xpos+20,ypos+10))
         elif block == "tungsten_ore":
-            winobj.blit(pg.transform.scale(ores[6],(cell_size,cell_size)),(xpos+20,ypos+10))          
+            winobj.blit(pg.transform.scale(resources["raw_ore"]["tungsten"],(cell_size,cell_size)),(xpos+20,ypos+10))                
+        elif block == "kelp":
+            winobj.blit(pg.transform.scale(resources["raw_ore"]["kelp"],(cell_size,cell_size)),(xpos+20,ypos+10))  
         elif block == "water":
-            winobj.blit(pg.transform.scale(ground_tiles[1],(cell_size,cell_size)),(xpos+20,ypos+10)) 
-        elif block == "grass":
-            winobj.blit(pg.transform.scale(ground_tiles[2],(cell_size,cell_size)),(xpos+20,ypos+10))         
+            winobj.blit(pg.transform.scale(ground_tiles[1],(cell_size,cell_size)),(xpos+20,ypos+10))              
         elif block == "grass":
             winobj.blit(pg.transform.scale(ground_tiles[2],(cell_size,cell_size)),(xpos+20,ypos+10))
-            winobj.blit(pg.transform.scale(ores[5],(cell_size,cell_size)),(xpos+20,ypos+10))
+        elif block == "leaves":
+            winobj.blit(pg.transform.scale(ground_tiles[2],(cell_size,cell_size)),(xpos+20,ypos+10))
+            winobj.blit(pg.transform.scale(resources["raw_ore"]["leaves"],(cell_size,cell_size)),(xpos+20,ypos+10))
         if block_building == "drill":
             if block_part == 1:
                 winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["drill"][0],block_rotation),(cell_size,cell_size)),(xpos+20,ypos+10))

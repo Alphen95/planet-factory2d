@@ -5,15 +5,16 @@ from pprint import pprint
 os.makedirs("logs",exist_ok=True)
 log_file = open(os.path.join("logs","log-{}.txt".format(str(datetime.datetime.now())[:-7])),"w+")
 log_file.write("[INFO] program started, time: {}\n".format(str(datetime.datetime.now())[:-7]))
-parser = argparse.ArgumentParser(description='Satisfactorey demake on Python. These options are fully extra.')
+parser = argparse.ArgumentParser(description='Satisfactory demake on Python. These options are completely optional.')
 parser.add_argument("--size",type=int,help="Changes the field size (default = 40). WARNING: Larger sizes make the world generate longer.")
 parser.add_argument("--cell",type=int,help="Changes the cell size (default = 30).")
 SPECIAL_YELLOW = (220,184,10)
 
 
-ui = [
-    pg.image.load(os.path.join("res","tooltip_box.png"))
-]
+ui = {
+    "tooltip":pg.image.load(os.path.join("res","ui","tooltip_box.png")),
+    "ppc":pg.image.load(os.path.join("res","ui","pocket_comp.png"))
+}
 
 resources= {
     "ingot":{
@@ -249,7 +250,7 @@ def draw_world(world,winobj,tick, pos,tooltip_props, menu_props,edit_mode):
             ypos = 3*(104-tooltip_props[0])
         if tooltip_props[0] <= 20:
             ypos = -60+tooltip_props[0]*3
-        winobj.blit(pg.transform.scale(pg.transform.rotate(ui[0],0),(190,60)),(xpos+10,ypos))
+        winobj.blit(pg.transform.scale(pg.transform.rotate(ui["tooltip"],0),(190,60)),(xpos+10,ypos))
         text_tile = font.render("Tile:{}".format(block),True,(0,0,0))
         text_build = font.render("Building:{}".format(block_building),True,(0,0,0))
         text_item = font.render("Item:{}".format(block_item),True,(0,0,0))

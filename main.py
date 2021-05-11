@@ -99,7 +99,7 @@ tooltip_tick = -1
 tooltip_tile = {}
 menu = "hidden"
 menu_tick = 0
-inventory = [{"item": ("ingot", "copper"), "amount": 64}, {"item": ("ingot", "iron"), "amount": 64}, {"item": ("unprocessed", "tungsten"), "amount": 64},{"item": ("ingot", "copper"), "amount": 64}, {"item": ("ingot", "iron"), "amount": 64}, {"item": ("unprocessed", "tungsten"), "amount": 64},{"item": ("ingot", "copper"), "amount": 64}, {"item": ("ingot", "iron"), "amount": 64}, {"item": ("unprocessed", "tungsten"), "amount": 64},{"item": ("ingot", "copper"), "amount": 64}, {"item": ("ingot", "iron"), "amount": 64}, {"item": ("electronics", "re_bat_100"), "amount": 1}]
+inventory = [{"item": ("ingot", "copper"), "amount": 64,"info":("Copper ingot","Just a regular copper","ingot. Used to craft","other things.","")}]
 current_item = ["drill", 90]
 mode = "building"
 power_capacity = 0
@@ -536,13 +536,18 @@ while 1:
             for x in range(0, 9):
                 if cursor_pos[0] >= 10 * x + (cell_size * 2) * x and cursor_pos[0] <= 10 * x + (cell_size * 2) * (x+1) and cursor_pos[1] >= 10 * y + (cell_size * 2) * y and cursor_pos[1] <= 10 * y + (cell_size * 2) * (y+1):
                     try:
-                        item = inventory[x+y*9]["item"]
+                        item = inventory[x+y*9]
                         window.blit(pg.transform.scale(ui["tooltip"],(cell_size*4,cell_size*2)),(cursor_pos[0]+cell_size,cursor_pos[1]+cell_size))
-                        if "unprocessed" in item:
-                            if "tungsten" in item:
-                                text1 = "Unprocessed Tungsten"
-                        text_tooltip1 = dosfont.render(text1,True,(0,0,0))
+                        text_tooltip1 = dosfont.render(item["info"][0],True,(0,0,0))
                         window.blit(text_tooltip1,(cursor_pos[0]+cell_size*1.2,cursor_pos[1]+cell_size*1.1))
+                        text_tooltip2 = dosfont.render(item["info"][1],True,(0,0,0))
+                        window.blit(text_tooltip2,(cursor_pos[0]+cell_size*1.2,cursor_pos[1]+cell_size*1.4))  
+                        text_tooltip2 = dosfont.render(item["info"][2],True,(0,0,0))
+                        window.blit(text_tooltip2,(cursor_pos[0]+cell_size*1.2,cursor_pos[1]+cell_size*1.7)) 
+                        text_tooltip2 = dosfont.render(item["info"][3],True,(0,0,0))
+                        window.blit(text_tooltip2,(cursor_pos[0]+cell_size*1.2,cursor_pos[1]+cell_size*2)) 
+                        text_tooltip2 = dosfont.render(item["info"][4],True,(0,0,0))
+                        window.blit(text_tooltip2,(cursor_pos[0]+cell_size*1.2,cursor_pos[1]+cell_size*2.3))                         
                     except:pass
     pg.display.update()
     clock.tick(45)

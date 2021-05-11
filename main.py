@@ -11,7 +11,6 @@ log_file = open(os.path.join("logs", "log-{}.txt".format(str(datetime.datetime.n
 log_file.write("[INFO] program started, time: {}\n".format(str(datetime.datetime.now())[:-7]))
 parser = argparse.ArgumentParser(description='Satisfactory demake on Python. These options are completely optional.')
 parser.add_argument("--size", type=int, help="Changes the field size (default = 40). WARNING: Larger sizes make the world generate longer.")
-parser.add_argument("--cell", type=int, help="Changes the cell size (default = 30).")
 SPECIAL_YELLOW = (220, 184, 10)
 ppc_power = 253
 ppc_batt = 1000
@@ -25,7 +24,9 @@ ui = {
         "50":pg.image.load(os.path.join("res", "ui", "bat_50.png")),
         "75":pg.image.load(os.path.join("res", "ui", "bat_75.png")),
         "100":pg.image.load(os.path.join("res", "ui", "bat_100.png"))
-    }
+    },
+    "inv_cell":pg.image.load(os.path.join("res", "ui", "inv_cell.png")),
+    "cursor":pg.image.load(os.path.join("res", "ui", "cursor.png"))
 }
 
 resources = {
@@ -63,14 +64,11 @@ resources = {
         "coal": pg.image.load(os.path.join("res", "unprocessed", "coal.png"))
     },
     "electronics":{
-        "re_bat":{
-            "0":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "0.png")),
-            "25":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "25.png")),
-            "50":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "50.png")),
-            "75":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "75.png")),
-            "100":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "100.png"))
-        }
-        
+        "re_bat_0":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "0.png")),
+        "re_bat_25":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "25.png")),
+        "re_bat_50":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "50.png")),
+        "re_bat_75":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "75.png")),
+        "re_bat_100":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "100.png"))
     }
 }
 
@@ -101,19 +99,16 @@ tooltip_tick = -1
 tooltip_tile = {}
 menu = "hidden"
 menu_tick = 0
-inventory = [{"item": ("ingot", "copper"), "amount": 64}, {"item": ("ingot", "iron"), "amount": 64}, {"item": ("unprocessed", "tungsten"), "amount": 64}]
+inventory = [{"item": ("ingot", "copper"), "amount": 64}, {"item": ("ingot", "iron"), "amount": 64}, {"item": ("unprocessed", "tungsten"), "amount": 64},{"item": ("ingot", "copper"), "amount": 64}, {"item": ("ingot", "iron"), "amount": 64}, {"item": ("unprocessed", "tungsten"), "amount": 64},{"item": ("ingot", "copper"), "amount": 64}, {"item": ("ingot", "iron"), "amount": 64}, {"item": ("unprocessed", "tungsten"), "amount": 64},{"item": ("ingot", "copper"), "amount": 64}, {"item": ("ingot", "iron"), "amount": 64}, {"item": ("electronics", "re_bat_100"), "amount": 1}]
 current_item = ["drill", 90]
 mode = "building"
 power_capacity = 0
 
 args = parser.parse_args()
-if args.size != None:
-    cell_size = args.size
-else:
-    cell_size = 40
+cell_size = 40
 screen_size = (cell_size * 20, cell_size * 20)
-if args.cell != None:
-    world_len = args.cell
+if args.size != None:
+    world_len = args.size
 else:
     world_len = 40
 
@@ -121,6 +116,7 @@ else:
 window = pg.display.set_mode(screen_size)
 clock = pg.time.Clock()
 pg.init()
+pg.mouse.set_visible(False)
 font = pg.font.SysFont("Verdana", 12)
 dosfont = pg.font.Font(os.path.join("res", "dosfont.ttf"), int(12*screen_size[1]/(40*20)))
 pos = [int(world_len/2), int(world_len/2)]
@@ -357,19 +353,20 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode):
         ypos = 0
         xpos = 0
         if menu_props[1] == "opening" or menu_props[1] == "open":
-            xpos = menu_props[0] * (cell_size / 2)
+            xpos = 0 * (cell_size / 2)
         elif menu_props[1] == "closing" or menu_props[1] == "hidden":
-            xpos = screen_size[0] - menu_props[0] * (cell_size / 2)
+            xpos = screen_size[0] - 0 * (cell_size / 2)
         pg.draw.polygon(winobj, (0, 0, 0), [[xpos, ypos], [xpos + screen_size[0] + 10, ypos], [xpos + screen_size[0] + 10, ypos + screen_size[1] - 70], [xpos, ypos + screen_size[1] - 70]])
         pg.draw.polygon(winobj, SPECIAL_YELLOW, [[xpos + 5, ypos + 5], [xpos + screen_size[0] + 10, ypos + 5], [xpos + screen_size[0] + 10, ypos + screen_size[1] - 75], [xpos + 5, ypos + screen_size[1] - 75]])
-        for y in range(0, 2):
+        for y in range(0, 3):
             for x in range(0, 9):
                 try:
-                    item = inventory[x + y * 10]["item"]
-                    item_amount = inventory[x + y * 10]["amount"]
+                    winobj.blit(pg.transform.scale(ui["inv_cell"], (cell_size * 2, cell_size * 2)), (xpos+ 5 + 10 * x + (cell_size * 2) * x, ypos + 5 + 10 * y + (cell_size * 2) * y))
+                    item = inventory[x + y * 9]["item"]
+                    item_amount = inventory[x + y * 9]["amount"]
                     winobj.blit(pg.transform.scale(resources[item[0]][item[1]], (cell_size * 2, cell_size * 2)), (xpos + 10 * x + (cell_size * 2) * x, ypos + 10 * y + (cell_size * 2) * y))
-                    text_amount = dosfont.render(str(item_amount), True, (0, 0, 0))
-                    winobj.blit(text_amount, (xpos + 10 * x + (cell_size * 2) * x+(cell_size*2), ypos + 10 * y + (cell_size * 4) * y+(cell_size*2)))
+                    text_amount = dosfont.render(str(item_amount), True, (255, 255, 255))
+                    winobj.blit(text_amount, (xpos + 10 * x + (cell_size * 2) * x+(cell_size*2) - 11, ypos + 10 * y + (cell_size * 2) * y+(cell_size*2) -11))
                 except:
                     pass
 
@@ -509,18 +506,20 @@ while 1:
             pos[0] -= speed
         if keys[pg.K_RIGHT] and pos[0] != world_len:
             pos[0] += speed
-    if tick % 5 == 0:
+    if tick % 3 == 0 and menu_tick == 0:
+        if keys[pg.K_e] and menu == "hidden":
+            menu = "opening"
+            menu_tick = 10
+        elif keys[pg.K_e] and menu == "open":
+            menu = "closing"
+            menu_tick = 10   
+        
+    if tick % 5 == 0:     
         if keys[pg.K_r]:
             if current_item[1] != 270:
                 current_item[1] += 90
             else:
                 current_item[1] = 0
-    if keys[pg.K_e] and menu == "hidden":
-        menu = "opening"
-        menu_tick = 40
-    elif keys[pg.K_e] and menu == "open":
-        menu = "closing"
-        menu_tick = 40
     if pos[0] >= world_len:
         pos[0] = world_len - 1
     elif pos[0] < 0:
@@ -529,6 +528,22 @@ while 1:
         pos[1] = world_len - 1
     elif pos[1] < 0:
         pos[1] = 0
+    cursor_pos = pg.mouse.get_pos()
+    window.blit(pg.transform.scale(ui["cursor"],(cell_size*2,cell_size*2)),cursor_pos)
+    if menu == "open":
+        cursor_pos = pg.mouse.get_pos()
+        for y in range(0, 3):
+            for x in range(0, 9):
+                if cursor_pos[0] >= 10 * x + (cell_size * 2) * x and cursor_pos[0] <= 10 * x + (cell_size * 2) * (x+1) and cursor_pos[1] >= 10 * y + (cell_size * 2) * y and cursor_pos[1] <= 10 * y + (cell_size * 2) * (y+1):
+                    try:
+                        item = inventory[x+y*9]["item"]
+                        window.blit(pg.transform.scale(ui["tooltip"],(cell_size*4,cell_size*2)),(cursor_pos[0]+cell_size,cursor_pos[1]+cell_size))
+                        if "unprocessed" in item:
+                            if "tungsten" in item:
+                                text1 = "Unprocessed Tungsten"
+                        text_tooltip1 = dosfont.render(text1,True,(0,0,0))
+                        window.blit(text_tooltip1,(cursor_pos[0]+cell_size*1.2,cursor_pos[1]+cell_size*1.1))
+                    except:pass
     pg.display.update()
     clock.tick(45)
     tick += 1

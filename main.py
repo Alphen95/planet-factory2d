@@ -123,7 +123,7 @@ clock = pg.time.Clock()
 pg.init()
 font = pg.font.SysFont("Verdana", 12)
 dosfont = pg.font.Font(os.path.join("res", "dosfont.ttf"), int(12*screen_size[1]/(40*20)))
-pos = [0, 0]
+pos = [int(world_len/2), int(world_len/2)]
 menubar = []
 
 # world define
@@ -379,7 +379,6 @@ while 1:
     if tick == 45:
         if mode == "building" and ppc_power != 0:
             ppc_power -= 1
-            print("a")
         tick = 0
         power_capacity = 0
         for tile_id, tile in enumerate(world):

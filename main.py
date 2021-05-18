@@ -7,7 +7,7 @@ import argparse
 from pprint import pprint
 
 os.makedirs("logs", exist_ok=True)
-log_file = open(os.path.join("logs", "log-{}.txt".format(str(datetime.datetime.now())[:-7])), "w+")
+log_file = open(os.path.join("logs", "log-{}.txt".format(str(datetime.datetime.now()).replace(":","_   ")[:-7])), "w+")
 log_file.write("[INFO] program started, time: {}\n".format(str(datetime.datetime.now())[:-7]))
 parser = argparse.ArgumentParser(description='Satisfactory demake on Python. These options are completely optional.')
 parser.add_argument("--size", type=int, help="Changes the field size (default = 40). WARNING: Larger sizes make the world generate longer.")
@@ -33,22 +33,15 @@ resources = {
     "ingot": {
         "iron": pg.image.load(os.path.join("res", "resources", "ingot", "iron.png")),
         "copper": pg.image.load(os.path.join("res", "resources", "ingot", "copper.png")),
-        "zinc": pg.image.load(os.path.join("res", "resources", "ingot", "zinc.png")),
-        "tin": pg.image.load(os.path.join("res", "resources", "ingot", "tin.png")),
-        "kelp": pg.image.load(os.path.join("res", "resources", "ingot", "kelp.png")),
+        "resin": pg.image.load(os.path.join("res", "resources", "ingot", "resin.png")),
         "leaves": pg.image.load(os.path.join("res", "resources", "ingot", "leaves.png")),
         "tungsten": pg.image.load(os.path.join("res", "resources", "ingot", "tungsten.png")),
-        "coal": pg.image.load(os.path.join("res", "resources", "ingot", "coal.png")),
-        "bronze": pg.image.load(os.path.join("res", "resources", "ingot", "bronze.png")),
-        "brass": pg.image.load(os.path.join("res", "resources", "ingot", "brass.png")),
-        "composite": pg.image.load(os.path.join("res", "resources", "ingot", "composite.png"))
+        "coal": pg.image.load(os.path.join("res", "resources", "ingot", "coal.png"))
     },
     "raw_ore": {
         "iron": pg.image.load(os.path.join("res", "ores", "iron.png")),
         "copper": pg.image.load(os.path.join("res", "ores", "copper.png")),
-        "zinc": pg.image.load(os.path.join("res", "ores", "zinc.png")),
-        "tin": pg.image.load(os.path.join("res", "ores", "tin.png")),
-        "kelp": pg.image.load(os.path.join("res", "ores", "kelp.png")),
+        "resin": pg.image.load(os.path.join("res", "ores", "resin.png")),
         "leaves": pg.image.load(os.path.join("res", "ores", "leaves.png")),
         "tungsten": pg.image.load(os.path.join("res", "ores", "tungsten.png")),
         "coal": pg.image.load(os.path.join("res", "ores", "coal.png"))
@@ -56,9 +49,7 @@ resources = {
     "unprocessed": {
         "iron": pg.image.load(os.path.join("res", "unprocessed", "iron.png")),
         "copper": pg.image.load(os.path.join("res", "unprocessed", "copper.png")),
-        "zinc": pg.image.load(os.path.join("res", "unprocessed", "zinc.png")),
-        "tin": pg.image.load(os.path.join("res", "unprocessed", "tin.png")),
-        "kelp": pg.image.load(os.path.join("res", "unprocessed", "kelp.png")),
+        "resin": pg.image.load(os.path.join("res", "unprocessed", "resin.png")),
         "leaves": pg.image.load(os.path.join("res", "unprocessed", "leaves.png")),
         "tungsten": pg.image.load(os.path.join("res", "unprocessed", "tungsten.png")),
         "coal": pg.image.load(os.path.join("res", "unprocessed", "coal.png"))
@@ -69,6 +60,10 @@ resources = {
         "re_bat_50":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "50.png")),
         "re_bat_75":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "75.png")),
         "re_bat_100":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "100.png"))
+    },
+    "bio":{
+        "biofiber": pg.image.load(os.path.join("res","resources", "bio", "biofiber.png")),
+        "leaves": pg.image.load(os.path.join("res","resources", "bio", "leaves.png"))
     }
 }
 
@@ -137,7 +132,7 @@ for i in range(0, random.randint(5, 20)):
             world[x + xpos + ((y + ypos) * world_len)]["tile"] = random.choice(grass_chance)
 
 
-for i in range(0, 7):
+for i in range(0, 4):
     x = random.randint(0, world_len - 1)
     y = random.randint(0, world_len - 1)
     if i == 0 or i == 1:
@@ -150,18 +145,12 @@ for i in range(0, 7):
         world[x + (y * world_len)] = {"item": None, "building": None, "tile": "copper_ore", "part": 0, "rotation": 0}
         log_file.write("[DEBUG] placed copper ore in x:{0} y:{1}, time:{2}\n".format(x, y, str(datetime.datetime.now())[:-7]))
     elif i == 4:
-        world[x + (y * world_len)] = {"item": None, "building": None, "tile": "tin_ore", "part": 0, "rotation": 0}
-        log_file.write("[DEBUG] placed tin ore in x:{0} y:{1}, time:{2}\n".format(x, y, str(datetime.datetime.now())[:-7]))
-    elif i == 5:
-        world[x + (y * world_len)] = {"item": None, "building": None, "tile": "zinc_ore", "part": 0, "rotation": 0}
-        log_file.write("[DEBUG] placed zinc ore in x:{0} y:{1}, time:{2}\n".format(x, y, str(datetime.datetime.now())[:-7]))
-    elif i == 7:
         world[x + (y * world_len)] = {"item": None, "building": None, "tile": "tungsten_ore", "part": 0, "rotation": 0}
         log_file.write("[DEBUG] placed tungsten ore in x:{0} y:{1}, time:{2}\n".format(x, y, str(datetime.datetime.now())[:-7]))
 for i1 in range(0, int((world_len - 20) / 2)):
     x = random.randint(0, world_len - 1)
     y = random.randint(0, world_len - 1)
-    i = random.randint(0, 7)
+    i = random.randint(0, 4)
     if i == 0 or i == 1:
         world[x + (y * world_len)] = {"item": None, "building": None, "tile": "coal_ore", "part": 0, "rotation": 0}
         log_file.write("[DEBUG] placed coal ore in x:{0} y:{1}, time:{2}\n".format(x, y, str(datetime.datetime.now())[:-7]))
@@ -172,28 +161,22 @@ for i1 in range(0, int((world_len - 20) / 2)):
         world[x + (y * world_len)] = {"item": None, "building": None, "tile": "copper_ore", "part": 0, "rotation": 0}
         log_file.write("[DEBUG] placed copper ore in x:{0} y:{1}, time:{2}\n".format(x, y, str(datetime.datetime.now())[:-7]))
     elif i == 4:
-        world[x + (y * world_len)] = {"item": None, "building": None, "tile": "tin_ore", "part": 0, "rotation": 0}
-        log_file.write("[DEBUG] placed tin ore in x:{0} y:{1}, time:{2}\n".format(x, y, str(datetime.datetime.now())[:-7]))
-    elif i == 5:
-        world[x + (y * world_len)] = {"item": None, "building": None, "tile": "zinc_ore", "part": 0, "rotation": 0}
-        log_file.write("[DEBUG] placed zinc ore in x:{0} y:{1}, time:{2}\n".format(x, y, str(datetime.datetime.now())[:-7]))
-    elif i == 7:
         world[x + (y * world_len)] = {"item": None, "building": None, "tile": "tungsten_ore", "part": 0, "rotation": 0}
         log_file.write("[DEBUG] placed tungsten ore in x:{0} y:{1}, time:{2}\n".format(x, y, str(datetime.datetime.now())[:-7]))
 x = random.randint(0, world_len - 3)
 y = random.randint(0, world_len - 3)
 for i in range(0, 3):
     for i1 in range(0, 3):
-        world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "water", "part": 0, "rotation": 0}
+        world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "grass", "part": 0, "rotation": 0}
         if i == 1 and i1 == 1:
-            world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "kelp", "part": 0, "rotation": 0}
+            world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "resin _tree", "part": 0, "rotation": 0}
 if int(world_len / 100) > 0:
     for l in range(0, int(world_len / 100)):
         for i in range(0, 3):
             for i1 in range(0, 3):
-                world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "water", "part": 0, "rotation": 0}
+                world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "grass", "part": 0, "rotation": 0}
                 if i == 1 and i1 == 1:
-                    world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "kelp", "part": 0, "rotation": 0}
+                    world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "resin_tree", "part": 0, "rotation": 0}
 
 world[0] = {"item": None, "building": "drill", "tile": "coal_ore", "part": 1, "rotation": 0}
 world[1] = {"item": None, "building": "drill", "tile": "stone", "part": 2, "rotation": 0}
@@ -235,14 +218,11 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode):
                 winobj.blit(pg.transform.scale(resources["raw_ore"]["iron"], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
             elif block == "copper_ore":
                 winobj.blit(pg.transform.scale(resources["raw_ore"]["copper"], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
-            elif block == "zinc_ore":
-                winobj.blit(pg.transform.scale(resources["raw_ore"]["zinc"], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
-            elif block == "tin_ore":
-                winobj.blit(pg.transform.scale(resources["raw_ore"]["tin"], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
             elif block == "tungsten_ore":
                 winobj.blit(pg.transform.scale(resources["raw_ore"]["tungsten"], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
-            elif block == "kelp":
-                winobj.blit(pg.transform.scale(resources["raw_ore"]["kelp"], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
+            elif block == "resin_tree":
+                winobj.blit(pg.transform.scale(ground_tiles[2], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
+                winobj.blit(pg.transform.scale(resources["raw_ore"]["resin"], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
             elif block == "water":
                 winobj.blit(pg.transform.scale(ground_tiles[1], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
             elif block == "grass":
@@ -292,14 +272,11 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode):
             winobj.blit(pg.transform.scale(resources["raw_ore"]["iron"], (cell_size, cell_size)), (xpos + 20, ypos + 10))
         elif block == "copper_ore":
             winobj.blit(pg.transform.scale(resources["raw_ore"]["copper"], (cell_size, cell_size)), (xpos + 20, ypos + 10))
-        elif block == "zinc_ore":
-            winobj.blit(pg.transform.scale(resources["raw_ore"]["zinc"], (cell_size, cell_size)), (xpos + 20, ypos + 10))
-        elif block == "tin_ore":
-            winobj.blit(pg.transform.scale(resources["raw_ore"]["tin"], (cell_size, cell_size)), (xpos + 20, ypos + 10))
         elif block == "tungsten_ore":
             winobj.blit(pg.transform.scale(resources["raw_ore"]["tungsten"], (cell_size, cell_size)), (xpos + 20, ypos + 10))
-        elif block == "kelp":
-            winobj.blit(pg.transform.scale(resources["raw_ore"]["kelp"], (cell_size, cell_size)), (xpos + 20, ypos + 10))
+        elif block == "resin_tree":
+            winobj.blit(pg.transform.scale(ground_tiles[2], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
+            winobj.blit(pg.transform.scale(resources["raw_ore"]["resin"], (cell_size, cell_size)), (xpos + 20, ypos + 10))
         elif block == "water":
             winobj.blit(pg.transform.scale(ground_tiles[1], (cell_size, cell_size)), (xpos + 20, ypos + 10))
         elif block == "grass":
@@ -397,7 +374,7 @@ while 1:
         menu = "hidden"
     if menu_tick == 0 and menu == "opening":
         menu = "open"
-    draw_world(world, window, tick, pos, [tooltip_tick, tooltip_tile], [menu_tick, menu], True)
+    draw_world(world, window, tick, pos, [tooltip_tick, tooltip_tile], [menu_tick, menu], mode=="building")
     for evt in pg.event.get():
         if evt.type == pg.QUIT:
             pg.quit()
@@ -488,6 +465,44 @@ while 1:
                                 world[x + ((y + 1) * world_len)]["rotation"] = 270
                                 world[x + (y * world_len)]["part"] = 1
                                 world[x + ((y + 1) * world_len)]["part"] = 2
+                elif mode == "!building":
+                    added = False
+                    if world[x+y*world_len]["tile"] == "iron_ore":
+                        for item_id, item in enumerate(inventory):
+                            if item["item"] == ("unprocessed","iron") and item["amount"] < 200:
+                                inventory[item_id]["amount"] += 1
+                                added = True
+                        if not(added) and len(inventory) < 30:
+                            inventory.append({"item":("unprocessed","iron"),"amount":1,"info":("Iron ore","Iron, waiting to be","melted. Can be transf-","ormed to iron ingot.","")})
+                    elif world[x+y*world_len]["tile"] == "copper_ore":
+                        for item_id, item in enumerate(inventory):
+                            if item["item"] == ("unprocessed","copper") and item["amount"] < 200:
+                                inventory[item_id]["amount"] += 1
+                                added = True
+                        if not(added) and len(inventory) < 30:
+                            inventory.append({"item":("unprocessed","copper"),"amount":1,"info":("Copper ore","Copper, waiting to be","melted. Can be transf-","ormed to copper ingot.","")})
+                    elif world[x+y*world_len]["tile"] == "tungsten_ore":
+                        for item_id, item in enumerate(inventory):
+                            if item["item"] == ("unprocessed","tungsten") and item["amount"] < 200:
+                                inventory[item_id]["amount"] += 1
+                                added = True
+                        if not(added) and len(inventory) < 30:
+                            inventory.append({"item":("unprocessed","tungsten"),"amount":1,"info":("Raw tungsten","Raw metal that can glow.","","","")})
+                    elif world[x+y*world_len]["tile"] == "coal_ore":
+                        for item_id, item in enumerate(inventory):
+                            if item["item"] == ("unprocessed","coal") and item["amount"] < 200:
+                                inventory[item_id]["amount"] += 1
+                                added = True
+                        if not(added) and len(inventory) < 30:
+                            inventory.append({"item":("unprocessed","coal"),"amount":1,"info":("Coal","Natural material.","Good for making steel.","","")})
+                    elif world[x+y*world_len]["tile"] == "leaves":
+                        for item_id, item in enumerate(inventory):
+                            if item["item"] == ("bio","leaves") and item["amount"] < 500:
+                                inventory[item_id]["amount"] += 1
+                                added = True
+                                world[x+y*world_len]["tile"] = "grass"
+                        if not(added) and len(inventory) < 30:
+                            inventory.append({"item":("bio","leaves"),"amount":1,"info":("Leaves","Natural material, but","has a little radiation in","it. Can be transformed","to Biofiber")})
 
             elif evt.button == 2:
                 tooltip_tile = true_visible_part[x + y * 20]
@@ -513,6 +528,12 @@ while 1:
         elif keys[pg.K_e] and menu == "open":
             menu = "closing"
             menu_tick = 10   
+    if tick % 9 == 0:
+        if keys[pg.K_m]:
+            if mode == "building":
+                mode = "!building"
+            elif mode == "!building":
+                mode = "building"        
         
     if tick % 5 == 0:     
         if keys[pg.K_r]:
@@ -520,6 +541,7 @@ while 1:
                 current_item[1] += 90
             else:
                 current_item[1] = 0
+            
     if pos[0] >= world_len:
         pos[0] = world_len - 1
     elif pos[0] < 0:
@@ -544,7 +566,7 @@ while 1:
                         window.blit(text_tooltip2,(cursor_pos[0]+cell_size*1.2,cursor_pos[1]+cell_size*1.4))  
                         text_tooltip2 = dosfont.render(item["info"][2],True,(0,0,0))
                         window.blit(text_tooltip2,(cursor_pos[0]+cell_size*1.2,cursor_pos[1]+cell_size*1.7)) 
-                        text_tooltip2 = dosfont.render(item["info"][3],True,(0,0,0))
+                        text_tooltip2 = dosfont.render(item["info"][3],True,(0,0,0)) 
                         window.blit(text_tooltip2,(cursor_pos[0]+cell_size*1.2,cursor_pos[1]+cell_size*2)) 
                         text_tooltip2 = dosfont.render(item["info"][4],True,(0,0,0))
                         window.blit(text_tooltip2,(cursor_pos[0]+cell_size*1.2,cursor_pos[1]+cell_size*2.3))                         

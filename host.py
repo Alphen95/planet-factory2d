@@ -5,7 +5,7 @@ import os
 import random
 
 inputed_port = input("Enter server port>")
-port = int(inputed_port) if int(inputed_port) < 65535 and int(inputed_port) > 0 and inputed_port.isdigit() else 8000
+port = int(inputed_port) if inputed_port.isdigit() and int(inputed_port) < 65535 and int(inputed_port) > 0 else 8000
 
 serverSocket = socket.socket()
 try:
@@ -21,6 +21,7 @@ clients = []
 dirname = os.path.dirname(__file__)
 serverSocket.listen(1)
 MAX_CLIENTS = 10
+new_blocks = []
 world = []
 starting_blocks = []
 world_len = 200
@@ -29,7 +30,7 @@ world_len = 200
 class Client:
     def __init__(self, socket, nickname, ID):
         self.socket = socket
-        self.socket.settimeout(86400)
+        self.socket.settimeout(5)
         self.nickname = nickname
         self.inventory = []
         self.id = ID
@@ -38,25 +39,30 @@ class Client:
         self.thread.start()
 
     def thread(self):
-        global world, starting_blocks, clients
+        running = True
+        global new_blocks, starting_blocks, clients
 
         while running:
             # try:
-            data = self.socket.recv(8192).decode("utf-8")
-            if not data:
-                break
-            data = json.loads(data)
-            world = data["new_blocks"]
+            received = ""
+            while True:
+                received += self.socket.recv(8192).decode("utf-8")
+                if not received:
+                    running = False
+                if received[-1] == "=":
+                    received = received[:-1]
+                    break
+            data = json.loads(received)
+            for block in data["new_blocks"]:
+                new_blocks.append(block)
             self.pos = data["self"]
-            reply = {"new_blocks": world}
+            reply = {"new_blocks": new_blocks}
             reply["users"] = [[c.pos, c.nickname] for c in clients if c.id != self.id]
             self.socket.send((json.dumps(reply) + "=").encode())
-            print("a")
-            """
-            except Exception as ex:
-                print("[EXCEPTION]", ex)
-                break
-            """
+            # except Exception as ex:
+            #    print("[EXCEPTION]", ex)
+            #    break
+
         print("[INFO] {} has disconnected".format(self.nickname))
         self.socket.close()
         clients.remove(self)

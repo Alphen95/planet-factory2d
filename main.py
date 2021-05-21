@@ -484,6 +484,11 @@ while 1:
                         mode = "!building"
                     elif mode == "!building":
                         mode = "building"
+                elif keys[pg.K_r]:
+                    if current_item[1] != 270:
+                        current_item[1] += 90
+                    else:
+                        current_item[1] = 0
             elif evt.type == pg.MOUSEBUTTONDOWN:
                 coords = evt.pos
                 # tooltip on middle-click
@@ -549,7 +554,8 @@ while 1:
                                     world[x + (y * world_len)]["part"] = 1
                                     world[x + ((y - 1) * world_len)]["part"] = 2
                                     new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
-                                    new_blocks.append({"id": x + ((y + 1) * world_len), "tile": world[x + ((y + 1) * world_len)]})
+                                    new_blocks.append({"id": x + ((y - 1) * world_len), "tile": world[x + ((y - 1) * world_len)]})
+                                    print("a", new_blocks)
                             elif current_item[1] == 180:
                                 if x > 0 and x <= world_len - 1 and y >= 0 and y <= world_len - 1 and world[x + (y * world_len)]["building"] == None and world[(x - 1) + (y * world_len)]["building"] == None:
                                     if world[x + (y * world_len)]["tile"] == "leaves":
@@ -607,12 +613,6 @@ while 1:
                 menu = "closing"
                 menu_tick = 10
 
-        if tick % 5 == 0:
-            if keys[pg.K_r]:
-                if current_item[1] != 270:
-                    current_item[1] += 90
-                else:
-                    current_item[1] = 0
         if player_state_timer == 0:
             coords = pg.mouse.get_pos()
             # tooltip on middle-click
@@ -788,16 +788,16 @@ while 1:
                         clientSocket.send(nick.encode())
                         received = ""
                         while True:
-                            print("cycling")
+                            # print("cycling")
                             received += clientSocket.recv(8192).decode("utf-8")
-                            # if not received:
-                            #running_thread = False
-                            print(received[-1])
+                            if not received:
+                                running_thread = False
+                            # print(received[-1])
                             if received[-1] == "=":
                                 received = received[:-1]
                                 break
-                        print("debug")
-                        print(received)
+                        # print("debug")
+                        # print(received)
                         received = json.loads(received)
                         starting_blocks = received["starting_blocks"]
                         world = []
@@ -816,29 +816,23 @@ while 1:
                         while running_thread:
                             # try:
                             data = {"nickname": nick, "self": pos, "new_blocks": new_blocks}
+                            clientSocket.send((json.dumps(data) + "=").encode())
 
-                            clientSocket.send(json.dumps(data).encode())
-                            received = clientSocket.recv(8192).decode("utf-8")
-                            if not received:
-                                running_thread = False
+                            received = ""
                             while True:
-                                try:
-                                    received = received + clientSocket.recv(8192).decode("utf-8")
-                                    if received[-1] == "=":
-                                        received = received[:-1]
-                                        break
-                                except:
-                                    pass
-                            print(received)
-                            print("a")
+                                received += clientSocket.recv(8192).decode("utf-8")
+                                if not received:
+                                    running_thread = False
+                                if received[-1] == "=":
+                                    received = received[:-1]
+                                    break
                             received = json.loads(received)
                             users = received["users"]
-                            print(users)
-                            new_blocks = received["new_blocks"]
-                            for new_block in new_blocks:
-                                world[new_block["id"]] = new_block["tile"]
+                            received_new_blocks = received["new_blocks"]
+                            for block in received_new_blocks:
+                                world[block["id"]] = block["tile"]
                             # except:
-                                # break
+                            # break
                         print("Connection lost or server closed")
 
                     socketTh = threading.Thread(target=socketThread)
@@ -865,5 +859,3 @@ while 1:
         pg.display.update()
         clock.tick(45)
         tick += 1
-        new_blocks = []
-        new_blocks.append({"id": 0, "tile": world[0]})

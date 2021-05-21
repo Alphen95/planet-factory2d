@@ -3,45 +3,56 @@ import sys
 import random
 import os
 import datetime
-import argparse
+import socket
+import threading
+import json
 from pprint import pprint
 
 os.makedirs("logs", exist_ok=True)
-log_file = open(os.path.join("logs", "log-{}.txt".format(str(datetime.datetime.now()).replace(":","_   ")[:-7])), "w+")
+log_file = open(os.path.join("logs", "log-{}.txt".format(str(datetime.datetime.now()).replace(":", "_   ")[:-7])), "w+")
 log_file.write("[INFO] program started, time: {}\n".format(str(datetime.datetime.now())[:-7]))
-parser = argparse.ArgumentParser(description='Satisfactory demake on Python. These options are completely optional.')
-parser.add_argument("--size", type=int, help="Changes the field size (default = 40). WARNING: Larger sizes make the world generate longer.")
 SPECIAL_YELLOW = (220, 184, 10)
 ppc_power = 253
 ppc_batt = 1000
+title = True
+multiplayer_setup = False
+selected = 0
+new_blocks = []
+users = []
+ip = "localhost"
+port = "8000"
+nick = "Player"
+world_applied = False
 
 ui = {
     "tooltip": pg.image.load(os.path.join("res", "ui", "tooltip_box.png")),
     "ppc": pg.image.load(os.path.join("res", "ui", "pocket_comp.png")),
-    "bat":{
-        "0":pg.image.load(os.path.join("res", "ui", "bat_0.png")),
-        "25":pg.image.load(os.path.join("res", "ui", "bat_25.png")),
-        "50":pg.image.load(os.path.join("res", "ui", "bat_50.png")),
-        "75":pg.image.load(os.path.join("res", "ui", "bat_75.png")),
-        "100":pg.image.load(os.path.join("res", "ui", "bat_100.png"))
+    "bat": {
+        "0": pg.image.load(os.path.join("res", "ui", "bat_0.png")),
+        "25": pg.image.load(os.path.join("res", "ui", "bat_25.png")),
+        "50": pg.image.load(os.path.join("res", "ui", "bat_50.png")),
+        "75": pg.image.load(os.path.join("res", "ui", "bat_75.png")),
+        "100": pg.image.load(os.path.join("res", "ui", "bat_100.png"))
     },
-    "inv_cell":pg.image.load(os.path.join("res", "ui", "inv_cell.png")),
-    "cursor":pg.image.load(os.path.join("res", "ui", "cursor.png"))
+    "inv_cell": pg.image.load(os.path.join("res", "ui", "inv_cell.png")),
+    "cursor": pg.image.load(os.path.join("res", "ui", "cursor.png")),
+    "title": pg.image.load(os.path.join("res", "ui", "title.png")),
+    "titlename": pg.image.load(os.path.join("res", "ui", "titlename.png"))
 }
 
 player = {
-    "default":[
+    "default": [
         pg.image.load(os.path.join("res", "player", "state0.png")),
         pg.image.load(os.path.join("res", "player", "state1.png"))
     ],
-    "dig":[
+    "dig": [
         pg.image.load(os.path.join("res", "player", "state0_dig0.png")),
-        pg.image.load(os.path.join("res", "player", "state1_dig0.png"))        
+        pg.image.load(os.path.join("res", "player", "state1_dig0.png"))
     ],
-    "dig_active":[
+    "dig_active": [
         pg.image.load(os.path.join("res", "player", "state0_dig1.png")),
-        pg.image.load(os.path.join("res", "player", "state1_dig1.png"))        
-    ]    
+        pg.image.load(os.path.join("res", "player", "state1_dig1.png"))
+    ]
 }
 
 resources = {
@@ -63,23 +74,23 @@ resources = {
         "coal": pg.image.load(os.path.join("res", "ores", "coal.png"))
     },
     "unprocessed": {
-        "iron": pg.image.load(os.path.join("res","resources", "unprocessed", "iron.png")),
-        "copper": pg.image.load(os.path.join("res", "resources","unprocessed", "copper.png")),
-        "resin": pg.image.load(os.path.join("res","resources", "unprocessed", "resin.png")),
-        "leaves": pg.image.load(os.path.join("res", "resources","unprocessed", "leaves.png")),
-        "tungsten": pg.image.load(os.path.join("res","resources", "unprocessed", "tungsten.png")),
-        "coal": pg.image.load(os.path.join("res","resources", "unprocessed", "coal.png"))
+        "iron": pg.image.load(os.path.join("res", "resources", "unprocessed", "iron.png")),
+        "copper": pg.image.load(os.path.join("res", "resources", "unprocessed", "copper.png")),
+        "resin": pg.image.load(os.path.join("res", "resources", "unprocessed", "resin.png")),
+        "leaves": pg.image.load(os.path.join("res", "resources", "unprocessed", "leaves.png")),
+        "tungsten": pg.image.load(os.path.join("res", "resources", "unprocessed", "tungsten.png")),
+        "coal": pg.image.load(os.path.join("res", "resources", "unprocessed", "coal.png"))
     },
-    "electronics":{
-        "re_bat_0":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "0.png")),
-        "re_bat_25":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "25.png")),
-        "re_bat_50":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "50.png")),
-        "re_bat_75":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "75.png")),
-        "re_bat_100":pg.image.load(os.path.join("res", "resources","electronics","re_bat", "100.png"))
+    "electronics": {
+        "re_bat_0": pg.image.load(os.path.join("res", "resources", "electronics", "re_bat", "0.png")),
+        "re_bat_25": pg.image.load(os.path.join("res", "resources", "electronics", "re_bat", "25.png")),
+        "re_bat_50": pg.image.load(os.path.join("res", "resources", "electronics", "re_bat", "50.png")),
+        "re_bat_75": pg.image.load(os.path.join("res", "resources", "electronics", "re_bat", "75.png")),
+        "re_bat_100": pg.image.load(os.path.join("res", "resources", "electronics", "re_bat", "100.png"))
     },
-    "bio":{
-        "biofiber": pg.image.load(os.path.join("res","resources", "bio", "biofiber.png")),
-        "leaves": pg.image.load(os.path.join("res","resources", "bio", "leaves.png"))
+    "bio": {
+        "biofiber": pg.image.load(os.path.join("res", "resources", "bio", "biofiber.png")),
+        "leaves": pg.image.load(os.path.join("res", "resources", "bio", "leaves.png"))
     }
 }
 
@@ -110,30 +121,28 @@ tooltip_tick = -1
 tooltip_tile = {}
 menu = "hidden"
 menu_tick = 0
-inventory = [{"item": ("ingot", "copper"), "amount": 64,"info":("Copper ingot","Just a regular copper","ingot. Used to craft","other things.","")}]
+inventory = [{"item": ("ingot", "copper"), "amount": 64, "info": ("Copper ingot", "Just a regular copper", "ingot. Used to craft", "other things.", "")}]
 current_item = ["drill", 90]
-mode = "building"
+mode = "!building"
 power_capacity = 0
 facing = 0
 player_state = "default"
 player_state_timer = 0
+running_thread = True
+starting_blocks = []
 
-args = parser.parse_args()
 cell_size = 40
 screen_size = (cell_size * 20, cell_size * 20)
-if args.size != None:
-    world_len = args.size
-else:
-    world_len = 40
-
+world_len = 200
 
 window = pg.display.set_mode(screen_size)
 clock = pg.time.Clock()
 pg.init()
 pg.mouse.set_visible(False)
 font = pg.font.SysFont("Verdana", 12)
-dosfont = pg.font.Font(os.path.join("res", "dosfont.ttf"), int(12*screen_size[1]/(40*20)))
-pos = [int(world_len/2), int(world_len/2)]
+dosfont = pg.font.Font(os.path.join("res", "dosfont.ttf"), int(12 * screen_size[1] / (40 * 20)))
+dosfontbig = pg.font.Font(os.path.join("res", "dosfont.ttf"), 24)
+pos = [int(world_len / 2), int(world_len / 2)]
 menubar = []
 
 # world define
@@ -142,7 +151,7 @@ for i in range(0, world_len * world_len):
     world.append({"item": None, "building": None, "tile": "stone", "part": 0, "rotation": 0})
 
 for i in range(0, random.randint(5, 20)):
-    size = random.randint(1, 10)
+    size = random.randint(1, 5)
     x = random.randint(0, world_len - (size + 1))
     y = random.randint(0, world_len - (size + 1))
     for xpos in range(0, size):
@@ -202,7 +211,7 @@ world[1] = {"item": None, "building": "drill", "tile": "stone", "part": 2, "rota
 world[2] = {"item": None, "building": "conveyor_belt", "tile": "stone", "part": 0, "rotation": 0}
 
 
-def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode,player_props):
+def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, player_props):
     winobj.fill((25, 25, 25))
     x = 0
     x1 = 0
@@ -275,9 +284,26 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode,pl
     else:
         y1 -= y_borders[0]
     if tick > 21:
-        winobj.blit(pg.transform.scale(pg.transform.flip(player[player_props[1]][1], player_props[0],False), (cell_size*2, cell_size*2)), ((x1-1) * cell_size, (y1-1) * cell_size))
+        winobj.blit(pg.transform.scale(pg.transform.flip(player[player_props[1]][1], player_props[0], False), (cell_size * 2, cell_size * 2)), ((x1 - 1) * cell_size, (y1 - 1) * cell_size))
     elif tick <= 21:
-        winobj.blit(pg.transform.scale(pg.transform.flip(player[player_props[1]][0], player_props[0],False), (cell_size*2, cell_size*2)), ((x1-1) * cell_size, (y1-1) * cell_size))
+        winobj.blit(pg.transform.scale(pg.transform.flip(player[player_props[1]][0], player_props[0], False), (cell_size * 2, cell_size * 2)), ((x1 - 1) * cell_size, (y1 - 1) * cell_size))
+    for user in users:
+        x1 = user[0][0]
+        y1 = user[0][1]
+        if x_borders[0] < 0:
+            x1 += abs(x_borders[0])
+        else:
+            x1 -= x_borders[0]
+        if y_borders[0] < 0:
+            y1 += abs(y_borders[0])
+        else:
+            y1 -= y_borders[0]
+        if tick > 21:
+            winobj.blit(pg.transform.scale(pg.transform.flip(player["default"][1], player_props[0], False), (cell_size * 2, cell_size * 2)), ((x1 - 1) * cell_size, (y1 - 1) * cell_size))
+        elif tick <= 21:
+            winobj.blit(pg.transform.scale(pg.transform.flip(player["default"][0], player_props[0], False), (cell_size * 2, cell_size * 2)), ((x1 - 1) * cell_size, (y1 - 1) * cell_size))
+        text_name = dosfont.render(user[1], True, (0, 0, 0))
+        winobj.blit(text_name, ((x1 - 1) * cell_size, (y1 - 1) * cell_size))
     if tooltip_props[0] != -1 and tooltip_props[1] != {}:
         block = tooltip_props[1]["tile"]
         block_rotation = tooltip_props[1]["rotation"]
@@ -333,32 +359,32 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode,pl
                 winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["conveyor"][3], block_rotation), (cell_size, cell_size)), (xpos + 20, ypos + 10))
 
     if edit_mode:
-        winobj.blit(pg.transform.scale(pg.transform.rotate(ui["ppc"], 0), (cell_size*6, cell_size*12)), (5, screen_size[1]+10-cell_size*8))
-        if ppc_power <= ppc_batt*0.01:
-            winobj.blit(pg.transform.scale(pg.transform.rotate(ui["bat"]["0"], 0), (int(cell_size*4.75),int(cell_size*4.75))), (cell_size*0.65, screen_size[1]-cell_size*8.75))
-        elif ppc_power <= ppc_batt*0.25:
-            winobj.blit(pg.transform.scale(pg.transform.rotate(ui["bat"]["25"], 0), (int(cell_size*4.75),int(cell_size*4.75))), (cell_size*0.65, screen_size[1]-cell_size*8.75))
-        elif ppc_power <= ppc_batt*0.5:
-            winobj.blit(pg.transform.scale(pg.transform.rotate(ui["bat"]["50"], 0), (int(cell_size*4.75),int(cell_size*4.75))), (cell_size*0.65, screen_size[1]-cell_size*8.75))          
+        winobj.blit(pg.transform.scale(pg.transform.rotate(ui["ppc"], 0), (cell_size * 6, cell_size * 12)), (5, screen_size[1] + 10 - cell_size * 8))
+        if ppc_power <= ppc_batt * 0.01:
+            winobj.blit(pg.transform.scale(pg.transform.rotate(ui["bat"]["0"], 0), (int(cell_size * 4.75), int(cell_size * 4.75))), (cell_size * 0.65, screen_size[1] - cell_size * 8.75))
+        elif ppc_power <= ppc_batt * 0.25:
+            winobj.blit(pg.transform.scale(pg.transform.rotate(ui["bat"]["25"], 0), (int(cell_size * 4.75), int(cell_size * 4.75))), (cell_size * 0.65, screen_size[1] - cell_size * 8.75))
+        elif ppc_power <= ppc_batt * 0.5:
+            winobj.blit(pg.transform.scale(pg.transform.rotate(ui["bat"]["50"], 0), (int(cell_size * 4.75), int(cell_size * 4.75))), (cell_size * 0.65, screen_size[1] - cell_size * 8.75))
         if tick >= 22:
-            if ppc_power <= ppc_batt*0.12:
-                winobj.blit(pg.transform.scale(pg.transform.rotate(ui["bat"]["0"], 0), (int(cell_size*4.75),int(cell_size*4.75))), (cell_size*0.65, screen_size[1]-cell_size*8.75))
-            elif ppc_power <= ppc_batt*0.37 and ppc_power >= ppc_batt*0.25:
-                winobj.blit(pg.transform.scale(pg.transform.rotate(ui["bat"]["25"], 0), (int(cell_size*4.75),int(cell_size*4.75))), (cell_size*0.65, screen_size[1]-cell_size*8.75))          
+            if ppc_power <= ppc_batt * 0.12:
+                winobj.blit(pg.transform.scale(pg.transform.rotate(ui["bat"]["0"], 0), (int(cell_size * 4.75), int(cell_size * 4.75))), (cell_size * 0.65, screen_size[1] - cell_size * 8.75))
+            elif ppc_power <= ppc_batt * 0.37 and ppc_power >= ppc_batt * 0.25:
+                winobj.blit(pg.transform.scale(pg.transform.rotate(ui["bat"]["25"], 0), (int(cell_size * 4.75), int(cell_size * 4.75))), (cell_size * 0.65, screen_size[1] - cell_size * 8.75))
         if ppc_power > 0:
             text_tile = dosfont.render(">ROTATE: [R]", True, (0, 0, 0))
             text_tile2 = dosfont.render(">CURRENT_ROT", True, (0, 0, 0))
             text_rot = dosfont.render(str(current_item[1]), True, (0, 0, 0))
             text_tile3 = dosfont.render("CURRENT_ITM", True, (0, 0, 0))
             text_item = dosfont.render(str(current_item[0]), True, (0, 0, 0))
-            winobj.blit(text_tile, (int(cell_size*1.5), (screen_size[1] + 15 + int((12*screen_size[1]/(40*20*5) - cell_size*4)*1.25))))
-            winobj.blit(text_tile2, (int(cell_size*1.5), (screen_size[1] + 15 + int((12*screen_size[1]/(40*20) - cell_size*4)*1.25))))
-            winobj.blit(text_rot, (int(cell_size*1.5), (screen_size[1] + 15 + (int((12*screen_size[1]/(40*20))*2) - cell_size*4)*1.25)))
-            winobj.blit(text_tile3, (int(cell_size*1.5), (screen_size[1] + 15 + (int((12*screen_size[1]/(40*20))*3) - cell_size*4)*1.25)))
-            winobj.blit(text_item, (int(cell_size*1.5), (screen_size[1] + 15 + (int(((12*screen_size[1]/(40*20))*4) - cell_size*4)*1.25))))
+            winobj.blit(text_tile, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20 * 5) - cell_size * 4) * 1.25))))
+            winobj.blit(text_tile2, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20) - cell_size * 4) * 1.25))))
+            winobj.blit(text_rot, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 2) - cell_size * 4) * 1.25)))
+            winobj.blit(text_tile3, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 3) - cell_size * 4) * 1.25)))
+            winobj.blit(text_item, (int(cell_size * 1.5), (screen_size[1] + 15 + (int(((12 * screen_size[1] / (40 * 20)) * 4) - cell_size * 4) * 1.25))))
         else:
             text_tile = dosfont.render("NO POWER", True, (0, 0, 0))
-            winobj.blit(text_tile, (cell_size*1.5, screen_size[1] + 15 + (int(12*screen_size[1]/(40*20))*2) - cell_size*4))
+            winobj.blit(text_tile, (cell_size * 1.5, screen_size[1] + 15 + (int(12 * screen_size[1] / (40 * 20)) * 2) - cell_size * 4))
     if menu_props[1] != "hidden":
         ypos = 0
         xpos = 0
@@ -371,64 +397,224 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode,pl
         for y in range(0, 3):
             for x in range(0, 9):
                 try:
-                    winobj.blit(pg.transform.scale(ui["inv_cell"], (cell_size * 2, cell_size * 2)), (xpos+ 5 + 10 * x + (cell_size * 2) * x, ypos + 5 + 10 * y + (cell_size * 2) * y))
+                    winobj.blit(pg.transform.scale(ui["inv_cell"], (cell_size * 2, cell_size * 2)), (xpos + 5 + 10 * x + (cell_size * 2) * x, ypos + 5 + 10 * y + (cell_size * 2) * y))
                     item = inventory[x + y * 9]["item"]
                     item_amount = inventory[x + y * 9]["amount"]
                     winobj.blit(pg.transform.scale(resources[item[0]][item[1]], (cell_size * 2, cell_size * 2)), (xpos + 10 * x + (cell_size * 2) * x, ypos + 10 * y + (cell_size * 2) * y))
                     text_amount = dosfont.render(str(item_amount), True, (255, 255, 255))
-                    winobj.blit(text_amount, (xpos + 10 * x + (cell_size * 2) * x+(cell_size*2) - 11, ypos + 10 * y + (cell_size * 2) * y+(cell_size*2) -11))
+                    winobj.blit(text_amount, (xpos + 10 * x + (cell_size * 2) * x + (cell_size * 2) - 11, ypos + 10 * y + (cell_size * 2) * y + (cell_size * 2) - 11))
                 except:
                     pass
 
 
+def draw_title(winobj):
+    for i in range(0, 64):
+        for i1 in range(0, 64):
+            winobj.blit(pg.transform.scale(ui["title"], (cell_size * 2, cell_size * 2)), (i1 * (cell_size * 2), i * (cell_size * 2)))
+    winobj.blit(pg.transform.scale(ui["titlename"], (cell_size * 10, cell_size * 5)), (5 * cell_size, 3 * cell_size))
+    pg.draw.rect(winobj, (100, 100, 100), (cell_size * 4, cell_size * 12, cell_size * 4, cell_size * 0.5))
+    pg.draw.rect(winobj, (100, 100, 100), (cell_size * 4, cell_size * 14, cell_size * 4, cell_size * 0.5))
+    text_singleplayer = dosfontbig.render(">Singleplayer", True, (0, 255, 0))
+    text_multiplayer = dosfontbig.render(">Multiplayer", True, (0, 255, 0))
+    winobj.blit(text_singleplayer, (cell_size * 4, cell_size * 12))
+    winobj.blit(text_multiplayer, (cell_size * 4, cell_size * 14))
+
+
+def draw_multiplayer(winobj, port, ip, nick):
+    for i in range(0, 64):
+        for i1 in range(0, 64):
+            winobj.blit(pg.transform.scale(ui["title"], (cell_size * 2, cell_size * 2)), (i1 * (cell_size * 2), i * (cell_size * 2)))
+    winobj.blit(pg.transform.scale(ui["titlename"], (cell_size * 10, cell_size * 5)), (5 * cell_size, 3 * cell_size))
+    pg.draw.rect(winobj, (100, 100, 100), (cell_size * 4, cell_size * 12, cell_size * 8, cell_size * 0.5))
+    pg.draw.rect(winobj, (100, 100, 100), (cell_size * 4, cell_size * 14, cell_size * 8, cell_size * 0.5))
+    pg.draw.rect(winobj, (100, 100, 100), (cell_size * 4, cell_size * 10, cell_size * 8, cell_size * 0.5))
+    text_port = dosfontbig.render("Port>" + str(port), True, (0, 255, 0))
+    text_ip = dosfontbig.render("IP>" + str(ip), True, (0, 255, 0))
+    text_nickname = dosfontbig.render("Nick>" + nick, True, (0, 255, 0))
+    winobj.blit(text_port, (cell_size * 4, cell_size * 12))
+    winobj.blit(text_ip, (cell_size * 4, cell_size * 14))
+    winobj.blit(text_nickname, (cell_size * 4, cell_size * 10))
+
+
 # main cycle
 while 1:
-    if tick == 45:
-        if mode == "building" and ppc_power != 0:
-            ppc_power -= 1
-        tick = 0
-        power_capacity = 0
-        for tile_id, tile in enumerate(world):
-            if tile["tile"] == "biomass_burner":
-                power_capacity += 100
-            elif tile["tile"] == "coal_plant" and tile["part"] == 1:
-                power_capacity += 250
-            elif tile["tile"] == "drill" and tile["part"] == 1:
-                power_capacity -= 25
-            if tile["tile"] == "grass" and random.randint(0, 25) == 0 and tile["building"] == None:
-                world[tile_id]["tile"] = "leaves"
-    if tooltip_tick != -1:
-        tooltip_tick -= 1
-    if menu_tick != 0:
-        menu_tick -= 1
-    if tooltip_tick == -1:
-        tooltip_tile = {}
-    if player_state_timer == 0 and player_state == "dig_active":
-        player_state = "dig"
-        player_state_timer = 15
-    elif player_state_timer == 0 and player_state != "ppc":
-        player_state = "default"
-    if player_state_timer > 0:
-        player_state_timer -=1
-    if menu_tick == 0 and menu == "closing":
-        menu = "hidden"
-    if menu_tick == 0 and menu == "opening":
-        menu = "open"
-    draw_world(world, window, tick, pos, [tooltip_tick, tooltip_tile], [menu_tick, menu], mode=="building",[facing!=0,player_state])
-    for evt in pg.event.get():
-        if evt.type == pg.QUIT:
-            pg.quit()
-            sys.exit()
-        elif evt.type == pg.KEYDOWN:
-    
-            keys = pg.key.get_pressed()              
-            if keys[pg.K_m]:
-                if mode == "building":
-                    mode = "!building"
-                elif mode == "!building":
-                    mode = "building"                    
-        elif evt.type == pg.MOUSEBUTTONDOWN:
-            coords = evt.pos
+    if not title and not multiplayer_setup:
+        if tick == 45:
+            if mode == "building" and ppc_power != 0:
+                ppc_power -= 1
+            tick = 0
+            power_capacity = 0
+            for tile_id, tile in enumerate(world):
+                if tile["tile"] == "biomass_burner":
+                    power_capacity += 100
+                elif tile["tile"] == "coal_plant" and tile["part"] == 1:
+                    power_capacity += 250
+                elif tile["tile"] == "drill" and tile["part"] == 1:
+                    power_capacity -= 25
+                if tile["tile"] == "grass" and random.randint(0, 25) == 0 and tile["building"] == None:
+                    world[tile_id]["tile"] = "leaves"
+        if tooltip_tick != -1:
+            tooltip_tick -= 1
+        if menu_tick != 0:
+            menu_tick -= 1
+        if tooltip_tick == -1:
+            tooltip_tile = {}
+        if player_state_timer == 0 and player_state == "dig_active":
+            player_state = "dig"
+            player_state_timer = 15
+        elif player_state_timer == 0 and player_state != "ppc":
+            player_state = "default"
+        if player_state_timer > 0:
+            player_state_timer -= 1
+        if menu_tick == 0 and menu == "closing":
+            menu = "hidden"
+        if menu_tick == 0 and menu == "opening":
+            menu = "open"
+        draw_world(world, window, tick, pos, [tooltip_tick, tooltip_tile], [menu_tick, menu], mode == "building", [facing != 0, player_state])
+        for evt in pg.event.get():
+            if evt.type == pg.QUIT:
+                running_thread = False
+                pg.quit()
+                sys.exit()
+            elif evt.type == pg.KEYDOWN:
+
+                keys = pg.key.get_pressed()
+                if keys[pg.K_m]:
+                    if mode == "building":
+                        mode = "!building"
+                    elif mode == "!building":
+                        mode = "building"
+            elif evt.type == pg.MOUSEBUTTONDOWN:
+                coords = evt.pos
+                # tooltip on middle-click
+                # build on left-click
+                x = int(coords[1] / cell_size)
+                y = int(coords[0] / cell_size)
+                x2 = 0
+                y2 = 0
+                x_borders = [pos[0] - 10, pos[0] + 10]
+                y_borders = [pos[1] - 10, pos[1] + 10]
+                visible_part = {}
+                for x1 in range(x_borders[0], x_borders[1]):
+                    for y1 in range(y_borders[0], y_borders[1]):
+                        visible_part[str(x1) + "_" + str(y1)] = {}
+                for i in range(0, len(world)):
+                    if x2 == world_len:
+                        x2 = 0
+                        y2 += 1
+                    if x2 >= x_borders[0] and x2 <= x_borders[1] and y2 >= y_borders[0] and y2 <= y_borders[1]:
+                        visible_part[str(x2) + "_" + str(y2)] = world[i]
+                    x2 += 1
+                true_visible_part = []
+                for x1 in range(x_borders[0], x_borders[1]):
+                    for y1 in range(y_borders[0], y_borders[1]):
+                        true_visible_part.append(visible_part[str(x1) + "_" + str(y1)])
+                if evt.button == 1:
+                    x = int(coords[0] / cell_size)
+                    y = int(coords[1] / cell_size)
+                    if x_borders[0] < 0:
+                        x -= abs(x_borders[0])
+                    else:
+                        x += x_borders[0]
+                    if y_borders[0] < 0:
+                        y -= abs(y_borders[0])
+                    else:
+                        y += y_borders[0]
+                    if mode == "building":
+                        if current_item[0] == "drill":
+                            if current_item[1] == 0:
+                                if x >= 0 and x < world_len - 1 and y >= 0 and y <= world_len - 1 and world[x + (y * world_len)]["building"] == None and world[(x + 1) + (y * world_len)]["building"] == None:
+                                    if world[x + (y * world_len)]["tile"] == "leaves":
+                                        world[x + (y * world_len)]["tile"] = "grass"
+                                    if world[(x + 1) + (y * world_len)]["tile"] == "leaves":
+                                        world[(x + 1) + (y * world_len)]["tile"] = "grass"
+                                    world[x + (y * world_len)]["building"] = "drill"
+                                    world[(x + 1) + (y * world_len)]["building"] = "drill"
+                                    world[x + (y * world_len)]["rotation"] = 0
+                                    world[(x + 1) + (y * world_len)]["rotation"] = 0
+                                    world[x + (y * world_len)]["part"] = 1
+                                    world[(x + 1) + (y * world_len)]["part"] = 2
+                                    new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                    new_blocks.append({"id": (x + 1) + (y * world_len), "tile": world[(x + 1) + (y * world_len)]})
+                            elif current_item[1] == 90:
+                                if y > 0 and y <= world_len - 1 and x >= 0 and x <= world_len - 1 and world[x + (y * world_len)]["building"] == None and world[x + ((y - 1) * world_len)]["building"] == None:
+                                    if world[x + (y * world_len)]["tile"] == "leaves":
+                                        world[x + (y * world_len)]["tile"] = "grass"
+                                    if world[x + ((y - 1) * world_len)]["tile"] == "leaves":
+                                        world[x + ((y - 1) * world_len)]["tile"] = "grass"
+                                    world[x + (y * world_len)]["building"] = "drill"
+                                    world[x + ((y - 1) * world_len)]["building"] = "drill"
+                                    world[x + (y * world_len)]["rotation"] = 90
+                                    world[x + ((y - 1) * world_len)]["rotation"] = 90
+                                    world[x + (y * world_len)]["part"] = 1
+                                    world[x + ((y - 1) * world_len)]["part"] = 2
+                                    new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                    new_blocks.append({"id": x + ((y + 1) * world_len), "tile": world[x + ((y + 1) * world_len)]})
+                            elif current_item[1] == 180:
+                                if x > 0 and x <= world_len - 1 and y >= 0 and y <= world_len - 1 and world[x + (y * world_len)]["building"] == None and world[(x - 1) + (y * world_len)]["building"] == None:
+                                    if world[x + (y * world_len)]["tile"] == "leaves":
+                                        world[x + (y * world_len)]["tile"] = "grass"
+                                    if world[(x - 1) + (y * world_len)]["tile"] == "leaves":
+                                        world[(x - 1) + (y * world_len)]["tile"] = "grass"
+                                    world[x + (y * world_len)]["building"] = "drill"
+                                    world[(x - 1) + (y * world_len)]["building"] = "drill"
+                                    world[x + (y * world_len)]["rotation"] = 180
+                                    world[(x - 1) + (y * world_len)]["rotation"] = 180
+                                    world[x + (y * world_len)]["part"] = 1
+                                    world[(x - 1) + (y * world_len)]["part"] = 2
+                                    new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                    new_blocks.append({"id": (x - 1) + (y * world_len), "tile": world[(x - 1) + (y * world_len)]})
+                            elif current_item[1] == 270:
+                                if y >= 0 and y < world_len - 1 and x >= 0 and x <= world_len - 1 and world[x + (y * world_len)]["building"] == None and world[x + ((y + 1) * world_len)]["building"] == None:
+                                    if world[x + (y * world_len)]["tile"] == "leaves":
+                                        world[x + (y * world_len)]["tile"] = "grass"
+                                    if world[x + ((y + 1) * world_len)]["tile"] == "leaves":
+                                        world[x + ((y + 1) * world_len)]["tile"] = "grass"
+                                    world[x + (y * world_len)]["building"] = "drill"
+                                    world[x + ((y + 1) * world_len)]["building"] = "drill"
+                                    world[x + (y * world_len)]["rotation"] = 270
+                                    world[x + ((y + 1) * world_len)]["rotation"] = 270
+                                    world[x + (y * world_len)]["part"] = 1
+                                    world[x + ((y + 1) * world_len)]["part"] = 2
+                                    new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                    new_blocks.append({"id": x + ((y + 1) * world_len), "tile": world[x + ((y + 1) * world_len)]})
+                elif evt.button == 2:
+                    tooltip_tile = true_visible_part[x + y * 20]
+                    tooltip_tick = 125
+
+        keys = pg.key.get_pressed()
+        if tick % 2 == 0:
+            keys = pg.key.get_pressed()
+            if keys[pg.K_LALT]:
+                speed = 4
+            else:
+                speed = 1
+            if keys[pg.K_UP] and pos[1] != 0:
+                pos[1] -= speed
+            if keys[pg.K_DOWN] and pos[1] != world_len:
+                pos[1] += speed
+            if keys[pg.K_LEFT] and pos[0] != 0:
+                pos[0] -= speed
+                facing = 0
+            if keys[pg.K_RIGHT] and pos[0] != world_len:
+                pos[0] += speed
+                facing = 1
+        if tick % 3 == 0 and menu_tick == 0:
+            if keys[pg.K_e] and menu == "hidden":
+                menu = "opening"
+                menu_tick = 10
+            elif keys[pg.K_e] and menu == "open":
+                menu = "closing"
+                menu_tick = 10
+
+        if tick % 5 == 0:
+            if keys[pg.K_r]:
+                if current_item[1] != 270:
+                    current_item[1] += 90
+                else:
+                    current_item[1] = 0
+        if player_state_timer == 0:
+            coords = pg.mouse.get_pos()
             # tooltip on middle-click
             # build on left-click
             x = int(coords[1] / cell_size)
@@ -452,7 +638,7 @@ while 1:
             for x1 in range(x_borders[0], x_borders[1]):
                 for y1 in range(y_borders[0], y_borders[1]):
                     true_visible_part.append(visible_part[str(x1) + "_" + str(y1)])
-            if evt.button == 1:
+            if pg.mouse.get_pressed()[0]:
                 x = int(coords[0] / cell_size)
                 y = int(coords[1] / cell_size)
                 if x_borders[0] < 0:
@@ -463,218 +649,221 @@ while 1:
                     y -= abs(y_borders[0])
                 else:
                     y += y_borders[0]
-                if mode == "building":
-                    if current_item[0] == "drill":
-                        if current_item[1] == 0:
-                            if x >= 0 and x < world_len - 1 and y >= 0 and y <= world_len - 1 and world[x + (y * world_len)]["building"] == None and world[(x + 1) + (y * world_len)]["building"] == None:
-                                if world[x + (y * world_len)]["tile"] == "leaves":
-                                    world[x + (y * world_len)]["tile"] = "grass"
-                                if world[(x + 1) + (y * world_len)]["tile"] == "leaves":
-                                    world[(x + 1) + (y * world_len)]["tile"] = "grass"
-                                world[x + (y * world_len)]["building"] = "drill"
-                                world[(x + 1) + (y * world_len)]["building"] = "drill"
-                                world[x + (y * world_len)]["rotation"] = 0
-                                world[(x + 1) + (y * world_len)]["rotation"] = 0
-                                world[x + (y * world_len)]["part"] = 1
-                                world[(x + 1) + (y * world_len)]["part"] = 2
-                        elif current_item[1] == 90:
-                            if y > 0 and y <= world_len - 1 and x >= 0 and x <= world_len - 1 and world[x + (y * world_len)]["building"] == None and world[x + ((y - 1) * world_len)]["building"] == None:
-                                if world[x + (y * world_len)]["tile"] == "leaves":
-                                    world[x + (y * world_len)]["tile"] = "grass"
-                                if world[x + ((y - 1) * world_len)]["tile"] == "leaves":
-                                    world[x + ((y - 1) * world_len)]["tile"] = "grass"
-                                world[x + (y * world_len)]["building"] = "drill"
-                                world[x + ((y - 1) * world_len)]["building"] = "drill"
-                                world[x + (y * world_len)]["rotation"] = 90
-                                world[x + ((y - 1) * world_len)]["rotation"] = 90
-                                world[x + (y * world_len)]["part"] = 1
-                                world[x + ((y - 1) * world_len)]["part"] = 2
-                        elif current_item[1] == 180:
-                            if x > 0 and x <= world_len - 1 and y >= 0 and y <= world_len - 1 and world[x + (y * world_len)]["building"] == None and world[(x - 1) + (y * world_len)]["building"] == None:
-                                if world[x + (y * world_len)]["tile"] == "leaves":
-                                    world[x + (y * world_len)]["tile"] = "grass"
-                                if world[(x - 1) + (y * world_len)]["tile"] == "leaves":
-                                    world[(x - 1) + (y * world_len)]["tile"] = "grass"
-                                world[x + (y * world_len)]["building"] = "drill"
-                                world[(x - 1) + (y * world_len)]["building"] = "drill"
-                                world[x + (y * world_len)]["rotation"] = 180
-                                world[(x - 1) + (y * world_len)]["rotation"] = 180
-                                world[x + (y * world_len)]["part"] = 1
-                                world[(x - 1) + (y * world_len)]["part"] = 2
-                        elif current_item[1] == 270:
-                            if y >= 0 and y < world_len - 1 and x >= 0 and x <= world_len - 1 and world[x + (y * world_len)]["building"] == None and world[x + ((y + 1) * world_len)]["building"] == None:
-                                if world[x + (y * world_len)]["tile"] == "leaves":
-                                    world[x + (y * world_len)]["tile"] = "grass"
-                                if world[x + ((y + 1) * world_len)]["tile"] == "leaves":
-                                    world[x + ((y - 1) * world_len)]["tile"] = "grass"
-                                world[x + (y * world_len)]["building"] = "drill"
-                                world[x + ((y + 1) * world_len)]["building"] = "drill"
-                                world[x + (y * world_len)]["rotation"] = 270
-                                world[x + ((y + 1) * world_len)]["rotation"] = 270
-                                world[x + (y * world_len)]["part"] = 1
-                                world[x + ((y + 1) * world_len)]["part"] = 2
-            elif evt.button == 2:
-                tooltip_tile = true_visible_part[x + y * 20]
-                tooltip_tick = 125
-        
-    keys = pg.key.get_pressed()    
-    if tick % 2 == 0:
-        keys = pg.key.get_pressed()
-        if keys[pg.K_LALT]:
-            speed = 4
-        else:
-            speed = 1
-        if keys[pg.K_UP] and pos[1] != 0:
-            pos[1] -= speed
-        if keys[pg.K_DOWN] and pos[1] != world_len:
-            pos[1] += speed
-        if keys[pg.K_LEFT] and pos[0] != 0:
-            pos[0] -= speed
-            facing = 0
-        if keys[pg.K_RIGHT] and pos[0] != world_len:
-            pos[0] += speed
-            facing = 1
-    if tick % 3 == 0 and menu_tick == 0:
-        if keys[pg.K_e] and menu == "hidden":
-            menu = "opening"
-            menu_tick = 10
-        elif keys[pg.K_e] and menu == "open":
-            menu = "closing"
-            menu_tick = 10 
-        
-        
-    if tick % 5 == 0:     
-        if keys[pg.K_r]:
-            if current_item[1] != 270:
-                current_item[1] += 90
-            else:
-                current_item[1] = 0
-    if player_state_timer == 0:
-        coords = pg.mouse.get_pos()
-        # tooltip on middle-click
-        # build on left-click
-        x = int(coords[1] / cell_size)
-        y = int(coords[0] / cell_size)
-        x2 = 0
-        y2 = 0
-        x_borders = [pos[0] - 10, pos[0] + 10]
-        y_borders = [pos[1] - 10, pos[1] + 10]
-        visible_part = {}
-        for x1 in range(x_borders[0], x_borders[1]):
-            for y1 in range(y_borders[0], y_borders[1]):
-                visible_part[str(x1) + "_" + str(y1)] = {}
-        for i in range(0, len(world)):
-            if x2 == world_len:
-                x2 = 0
-                y2 += 1
-            if x2 >= x_borders[0] and x2 <= x_borders[1] and y2 >= y_borders[0] and y2 <= y_borders[1]:
-                visible_part[str(x2) + "_" + str(y2)] = world[i]
-            x2 += 1
-        true_visible_part = []
-        for x1 in range(x_borders[0], x_borders[1]):
-            for y1 in range(y_borders[0], y_borders[1]):
-                true_visible_part.append(visible_part[str(x1) + "_" + str(y1)])
-        if pg.mouse.get_pressed()[0]:
-            x = int(coords[0] / cell_size)
-            y = int(coords[1] / cell_size)
-            if x_borders[0] < 0:
-                x -= abs(x_borders[0])
-            else:
-                x += x_borders[0]
-            if y_borders[0] < 0:
-                y -= abs(y_borders[0])
-            else:
-                y += y_borders[0]
-            if mode == "!building":
-                added = False
-                if world[x+y*world_len]["tile"] == "iron_ore":
-                    for item_id, item in enumerate(inventory):
-                        if item["item"] == ("unprocessed","iron") and item["amount"] < 200:
-                            inventory[item_id]["amount"] += 1
-                            added = True
+                if mode == "!building":
+                    added = False
+                    if world[x + y * world_len]["tile"] == "iron_ore":
+                        for item_id, item in enumerate(inventory):
+                            if item["item"] == ("unprocessed", "iron") and item["amount"] < 200:
+                                inventory[item_id]["amount"] += 1
+                                added = True
+                                player_state_timer = 15
+                                player_state = "dig_active"
+                        if not(added) and len(inventory) < 30:
+                            inventory.append({"item": ("unprocessed", "iron"), "amount": 1, "info": ("Iron ore", "Iron, waiting to be", "melted. Can be transf-", "ormed to iron ingot.", "")})
                             player_state_timer = 5
                             player_state = "dig_active"
-                    if not(added) and len(inventory) < 30:
-                        inventory.append({"item":("unprocessed","iron"),"amount":1,"info":("Iron ore","Iron, waiting to be","melted. Can be transf-","ormed to iron ingot.","")})
-                        player_state_timer = 5
-                        player_state = "dig_active"                        
-                elif world[x+y*world_len]["tile"] == "copper_ore":
-                    for item_id, item in enumerate(inventory):
-                        if item["item"] == ("unprocessed","copper") and item["amount"] < 200:
-                            inventory[item_id]["amount"] += 1
-                            added = True
+                    elif world[x + y * world_len]["tile"] == "copper_ore":
+                        for item_id, item in enumerate(inventory):
+                            if item["item"] == ("unprocessed", "copper") and item["amount"] < 200:
+                                inventory[item_id]["amount"] += 1
+                                added = True
+                                player_state_timer = 5
+                                player_state = "dig_active"
+                        if not(added) and len(inventory) < 30:
+                            inventory.append({"item": ("unprocessed", "copper"), "amount": 1, "info": ("Copper ore", "Copper, waiting to be", "melted. Can be transf-", "ormed to copper ingot.", "")})
                             player_state_timer = 5
-                            player_state = "dig_active"                            
-                    if not(added) and len(inventory) < 30:
-                        inventory.append({"item":("unprocessed","copper"),"amount":1,"info":("Copper ore","Copper, waiting to be","melted. Can be transf-","ormed to copper ingot.","")})
-                        player_state_timer = 5
-                        player_state = "dig_active"                        
-                elif world[x+y*world_len]["tile"] == "tungsten_ore":
-                    for item_id, item in enumerate(inventory):
-                        if item["item"] == ("unprocessed","tungsten") and item["amount"] < 200:
-                            inventory[item_id]["amount"] += 1
-                            added = True
+                            player_state = "dig_active"
+                    elif world[x + y * world_len]["tile"] == "tungsten_ore":
+                        for item_id, item in enumerate(inventory):
+                            if item["item"] == ("unprocessed", "tungsten") and item["amount"] < 200:
+                                inventory[item_id]["amount"] += 1
+                                added = True
+                                player_state_timer = 5
+                                player_state = "dig_active"
+                        if not(added) and len(inventory) < 30:
+                            inventory.append({"item": ("unprocessed", "tungsten"), "amount": 1, "info": ("Raw tungsten", "Raw metal that can glow.", "", "", "")})
                             player_state_timer = 5
-                            player_state = "dig_active"                            
-                    if not(added) and len(inventory) < 30:
-                        inventory.append({"item":("unprocessed","tungsten"),"amount":1,"info":("Raw tungsten","Raw metal that can glow.","","","")})
-                        player_state_timer = 5
-                        player_state = "dig_active"                        
-                elif world[x+y*world_len]["tile"] == "coal_ore":
-                    for item_id, item in enumerate(inventory):
-                        if item["item"] == ("unprocessed","coal") and item["amount"] < 200:
-                            inventory[item_id]["amount"] += 1
-                            added = True
+                            player_state = "dig_active"
+                    elif world[x + y * world_len]["tile"] == "coal_ore":
+                        for item_id, item in enumerate(inventory):
+                            if item["item"] == ("unprocessed", "coal") and item["amount"] < 200:
+                                inventory[item_id]["amount"] += 1
+                                added = True
+                                player_state_timer = 5
+                                player_state = "dig_active"
+                        if not(added) and len(inventory) < 30:
+                            inventory.append({"item": ("unprocessed", "coal"), "amount": 1, "info": ("Coal", "Natural material.", "Good for making steel.", "", "")})
                             player_state_timer = 5
-                            player_state = "dig_active"                            
-                    if not(added) and len(inventory) < 30:
-                        inventory.append({"item":("unprocessed","coal"),"amount":1,"info":("Coal","Natural material.","Good for making steel.","","")})
-                        player_state_timer = 5
-                        player_state = "dig_active"                        
-                elif world[x+y*world_len]["tile"] == "leaves":
-                    for item_id, item in enumerate(inventory):
-                        if item["item"] == ("bio","leaves") and item["amount"] < 500:
-                            inventory[item_id]["amount"] += 1
-                            added = True
-                            world[x+y*world_len]["tile"] = "grass"
+                            player_state = "dig_active"
+                    elif world[x + y * world_len]["tile"] == "leaves":
+                        for item_id, item in enumerate(inventory):
+                            if item["item"] == ("bio", "leaves") and item["amount"] < 500:
+                                inventory[item_id]["amount"] += 1
+                                added = True
+                                world[x + y * world_len]["tile"] = "grass"
+                                player_state_timer = 5
+                                player_state = "dig_active"
+                        if not(added) and len(inventory) < 30:
+                            inventory.append({"item": ("bio", "leaves"), "amount": 1, "info": ("Leaves", "Natural material, but", "has a little radiation in", "it. Can be transformed", "to Biofiber")})
+                            world[x + y * world_len]["tile"] = "grass"
                             player_state_timer = 5
-                            player_state = "dig_active"                            
-                    if not(added) and len(inventory) < 30:
-                        inventory.append({"item":("bio","leaves"),"amount":1,"info":("Leaves","Natural material, but","has a little radiation in","it. Can be transformed","to Biofiber")}) 
-                        world[x+y*world_len]["tile"] = "grass"
-                        player_state_timer = 5
-                        player_state = "dig_active" 
-            
-            
-    if pos[0] >= world_len:
-        pos[0] = world_len - 1
-    elif pos[0] < 0:
-        pos[0] = 0
-    if pos[1] >= world_len:
-        pos[1] = world_len - 1
-    elif pos[1] < 0:
-        pos[1] = 0
-    cursor_pos = pg.mouse.get_pos()
-    window.blit(pg.transform.scale(ui["cursor"],(cell_size*2,cell_size*2)),cursor_pos)
-    if menu == "open":
+                            player_state = "dig_active"
+
+        if pos[0] >= world_len:
+            pos[0] = world_len - 1
+        elif pos[0] < 0:
+            pos[0] = 0
+        if pos[1] >= world_len:
+            pos[1] = world_len - 1
+        elif pos[1] < 0:
+            pos[1] = 0
         cursor_pos = pg.mouse.get_pos()
-        for y in range(0, 3):
-            for x in range(0, 9):
-                if cursor_pos[0] >= 10 * x + (cell_size * 2) * x and cursor_pos[0] <= 10 * x + (cell_size * 2) * (x+1) and cursor_pos[1] >= 10 * y + (cell_size * 2) * y and cursor_pos[1] <= 10 * y + (cell_size * 2) * (y+1):
+        window.blit(pg.transform.scale(ui["cursor"], (cell_size * 2, cell_size * 2)), cursor_pos)
+        if menu == "open":
+            cursor_pos = pg.mouse.get_pos()
+            for y in range(0, 3):
+                for x in range(0, 9):
+                    if cursor_pos[0] >= 10 * x + (cell_size * 2) * x and cursor_pos[0] <= 10 * x + (cell_size * 2) * (x + 1) and cursor_pos[1] >= 10 * y + (cell_size * 2) * y and cursor_pos[1] <= 10 * y + (cell_size * 2) * (y + 1):
+                        try:
+                            item = inventory[x + y * 9]
+                            window.blit(pg.transform.scale(ui["tooltip"], (cell_size * 4, cell_size * 2)), (cursor_pos[0] + cell_size, cursor_pos[1] + cell_size))
+                            text_tooltip1 = dosfont.render(item["info"][0], True, (0, 0, 0))
+                            window.blit(text_tooltip1, (cursor_pos[0] + cell_size * 1.2, cursor_pos[1] + cell_size * 1.1))
+                            text_tooltip2 = dosfont.render(item["info"][1], True, (0, 0, 0))
+                            window.blit(text_tooltip2, (cursor_pos[0] + cell_size * 1.2, cursor_pos[1] + cell_size * 1.4))
+                            text_tooltip2 = dosfont.render(item["info"][2], True, (0, 0, 0))
+                            window.blit(text_tooltip2, (cursor_pos[0] + cell_size * 1.2, cursor_pos[1] + cell_size * 1.7))
+                            text_tooltip2 = dosfont.render(item["info"][3], True, (0, 0, 0))
+                            window.blit(text_tooltip2, (cursor_pos[0] + cell_size * 1.2, cursor_pos[1] + cell_size * 2))
+                            text_tooltip2 = dosfont.render(item["info"][4], True, (0, 0, 0))
+                            window.blit(text_tooltip2, (cursor_pos[0] + cell_size * 1.2, cursor_pos[1] + cell_size * 2.3))
+                        except:
+                            pass
+        pg.display.update()
+        clock.tick(45)
+        tick += 1
+    elif title and not multiplayer_setup:
+        for evt in pg.event.get():
+            if evt.type == pg.QUIT:
+                pg.quit()
+                sys.exit()
+            elif evt.type == pg.MOUSEBUTTONDOWN:
+                mouse_pos = pg.mouse.get_pos()
+                if mouse_pos[0] >= cell_size * 4 and mouse_pos[0] <= cell_size * 8:
+                    if mouse_pos[1] >= cell_size * 12 and mouse_pos[1] <= cell_size * 12.5:
+                        title = False
+                        tick = -1
+                    if mouse_pos[1] >= cell_size * 14 and mouse_pos[1] <= cell_size * 14.5:
+                        title = False
+                        multiplayer_setup = True
+                        tick = -1
+        draw_title(window)
+        cursor_pos = pg.mouse.get_pos()
+        window.blit(pg.transform.scale(ui["cursor"], (cell_size * 2, cell_size * 2)), cursor_pos)
+        pg.display.update()
+        clock.tick(45)
+        tick += 1
+    elif not title and multiplayer_setup:
+        for evt in pg.event.get():
+            if evt.type == pg.QUIT:
+                pg.quit()
+                sys.exit()
+            elif evt.type == pg.MOUSEBUTTONDOWN:
+                mouse_pos = pg.mouse.get_pos()
+                if mouse_pos[0] >= cell_size * 4 and mouse_pos[0] <= cell_size * 12:
+                    if mouse_pos[1] >= cell_size * 12 and mouse_pos[1] <= cell_size * 12.5:
+                        selected = 0
+                    elif mouse_pos[1] >= cell_size * 14 and mouse_pos[1] <= cell_size * 14.5:
+                        selected = 1
+                    elif mouse_pos[1] >= cell_size * 10 and mouse_pos[1] <= cell_size * 14.5:
+                        selected = 2
+            elif evt.type == pg.KEYDOWN:
+                if evt.key == pg.K_RETURN:
+                    port = int(port) if port.isdigit() and int(port) < 65535 and int(port) > 0 else 8000
+                    clientSocket = socket.socket()
+
                     try:
-                        item = inventory[x+y*9]
-                        window.blit(pg.transform.scale(ui["tooltip"],(cell_size*4,cell_size*2)),(cursor_pos[0]+cell_size,cursor_pos[1]+cell_size))
-                        text_tooltip1 = dosfont.render(item["info"][0],True,(0,0,0))
-                        window.blit(text_tooltip1,(cursor_pos[0]+cell_size*1.2,cursor_pos[1]+cell_size*1.1))
-                        text_tooltip2 = dosfont.render(item["info"][1],True,(0,0,0))
-                        window.blit(text_tooltip2,(cursor_pos[0]+cell_size*1.2,cursor_pos[1]+cell_size*1.4))  
-                        text_tooltip2 = dosfont.render(item["info"][2],True,(0,0,0))
-                        window.blit(text_tooltip2,(cursor_pos[0]+cell_size*1.2,cursor_pos[1]+cell_size*1.7)) 
-                        text_tooltip2 = dosfont.render(item["info"][3],True,(0,0,0)) 
-                        window.blit(text_tooltip2,(cursor_pos[0]+cell_size*1.2,cursor_pos[1]+cell_size*2)) 
-                        text_tooltip2 = dosfont.render(item["info"][4],True,(0,0,0))
-                        window.blit(text_tooltip2,(cursor_pos[0]+cell_size*1.2,cursor_pos[1]+cell_size*2.3))                         
-                    except:pass
-    pg.display.update()
-    clock.tick(45)
-    tick += 1
+                        clientSocket.connect((ip, int(port)))
+                        clientSocket.settimeout(5)
+                        clientSocket.send(nick.encode())
+                        received = ""
+                        while True:
+                            print("cycling")
+                            received += clientSocket.recv(8192).decode("utf-8")
+                            # if not received:
+                            #running_thread = False
+                            print(received[-1])
+                            if received[-1] == "=":
+                                received = received[:-1]
+                                break
+                        print("debug")
+                        print(received)
+                        received = json.loads(received)
+                        starting_blocks = received["starting_blocks"]
+                        world = []
+                        for i in range(0, world_len * world_len):
+                            world.append({"item": None, "building": None, "tile": "stone", "part": 0, "rotation": 0})
+                        for block in starting_blocks:
+                            world[block["id"]] = block["tile"]
+                        for new_block in new_blocks:
+                            world[new_block["id"]] = new_block["tile"]
+                    except:
+                        print("Failed to connect")
+
+                    def socketThread():
+                        global clientSocket, running_thread, users, pos, world, new_blocks, starting_blocks
+
+                        while running_thread:
+                            # try:
+                            data = {"nickname": nick, "self": pos, "new_blocks": new_blocks}
+
+                            clientSocket.send(json.dumps(data).encode())
+                            received = clientSocket.recv(8192).decode("utf-8")
+                            if not received:
+                                running_thread = False
+                            while True:
+                                try:
+                                    received = received + clientSocket.recv(8192).decode("utf-8")
+                                    if received[-1] == "=":
+                                        received = received[:-1]
+                                        break
+                                except:
+                                    pass
+                            print(received)
+                            print("a")
+                            received = json.loads(received)
+                            users = received["users"]
+                            print(users)
+                            new_blocks = received["new_blocks"]
+                            for new_block in new_blocks:
+                                world[new_block["id"]] = new_block["tile"]
+                            # except:
+                                # break
+                        print("Connection lost or server closed")
+
+                    socketTh = threading.Thread(target=socketThread)
+                    socketTh.start()
+                    multiplayer_setup = False
+                    title = False
+                elif evt.key == pg.K_BACKSPACE:
+                    if selected == 0:
+                        port = port[:-1]
+                    elif selected == 1:
+                        ip = ip[:-1]
+                    elif selected == 2:
+                        nick = nick[:-1]
+                else:
+                    if selected == 0 and len(port) < 5:
+                        port += evt.unicode
+                    elif selected == 1 and len(ip) < 14:
+                        ip += evt.unicode
+                    elif selected == 2 and len(nick) < 15:
+                        nick += evt.unicode
+        draw_multiplayer(window, port, ip, nick)
+        cursor_pos = pg.mouse.get_pos()
+        window.blit(pg.transform.scale(ui["cursor"], (cell_size * 2, cell_size * 2)), cursor_pos)
+        pg.display.update()
+        clock.tick(45)
+        tick += 1
+        new_blocks = []
+        new_blocks.append({"id": 0, "tile": world[0]})

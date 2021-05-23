@@ -3,9 +3,11 @@ import threading
 import json
 import os
 import random
+import pygame
 
 inputed_port = input("Enter server port>")
 port = int(inputed_port) if inputed_port.isdigit() and int(inputed_port) < 65535 and int(inputed_port) > 0 else 8000
+clock = pygame.time.Clock()
 
 serverSocket = socket.socket()
 try:
@@ -25,6 +27,8 @@ new_blocks = []
 world = []
 starting_blocks = []
 world_len = 200
+tick = 0
+temp_new_blocks = []
 
 
 class Client:
@@ -40,28 +44,32 @@ class Client:
 
     def thread(self):
         running = True
-        global new_blocks, starting_blocks, clients
+        global new_blocks, starting_blocks, clients, temp_new_blocks
 
         while running:
-            # try:
-            received = ""
-            while True:
-                received += self.socket.recv(8192).decode("utf-8")
-                if not received:
-                    running = False
-                if received[-1] == "=":
-                    received = received[:-1]
-                    break
-            data = json.loads(received)
-            for block in data["new_blocks"]:
-                new_blocks.append(block)
-            self.pos = data["self"]
-            reply = {"new_blocks": new_blocks}
-            reply["users"] = [[c.pos, c.nickname] for c in clients if c.id != self.id]
-            self.socket.send((json.dumps(reply) + "=").encode())
-            # except Exception as ex:
-            #    print("[EXCEPTION]", ex)
-            #    break
+            try:
+                received = ""
+                while True:
+                    received += self.socket.recv(8192).decode("utf-8")
+                    if not received:
+                        running = False
+                    if received[-1] == "=":
+                        received = received[:-1]
+                        break
+                data = json.loads(received)
+                for block in data["new_blocks"]:
+                    new_blocks.append(block)
+                for temp_block in data["temp_new_blocks"]:
+                    world[temp_block["id"]] = temp_block["tile"]
+                    print(temp_block)
+                self.pos = data["self"]
+                if temp_new_blocks != []: print(temp_new_blocks)
+                reply = {"new_blocks": new_blocks,"temp_new_blocks":temp_new_blocks}
+                reply["users"] = [[c.pos, c.nickname] for c in clients if c.id != self.id]
+                self.socket.send((json.dumps(reply) + "=").encode())
+            except Exception as ex:
+                print("[EXCEPTION]", ex)
+                break
 
         print("[INFO] {} has disconnected".format(self.nickname))
         self.socket.close()
@@ -69,15 +77,33 @@ class Client:
 
 
 def globalUpdateCycle():
-    global clients
-    while True:
-        break
+    global clients, running, tick, world, temp_new_blocks
+    while running:
+        power_capacity = 0
+        if tick == 44:
+            temp_new_blocks = []
+            print("a")
+            tick = 0
+            for tile_id, tile in enumerate(world):
+                if tile["tile"] == "biomass_burner":
+                    power_capacity += 100
+                elif tile["tile"] == "coal_plant" and tile["part"] == 1:
+                    power_capacity += 250
+                elif tile["tile"] == "drill" and tile["part"] == 1:
+                    power_capacity -= 25
+                if tile["tile"] == "grass" and random.randint(0, 25) == 0 and tile["building"] == None: 
+                    world[tile_id]["tile"] = "leaves"
+                    #print("a")
+                    temp_new_blocks.append({"id": tile_id, "tile": world[tile_id]})
+                    print(temp_new_blocks)
+        clock.tick(45)
+        tick += 1
 
 
 for i in range(0, world_len * world_len):
     world.append({"item": None, "building": None, "tile": "stone", "part": 0, "rotation": 0})
 
-for i in range(0, random.randint(5, 20)):
+for i in range(0, random.randint(15, 40)):
     size = random.randint(1, 5)
     x = random.randint(0, world_len - (size + 1))
     y = random.randint(0, world_len - (size + 1))

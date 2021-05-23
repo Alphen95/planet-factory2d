@@ -14,9 +14,9 @@ log_file.write("[INFO] program started, time: {}\n".format(str(datetime.datetime
 SPECIAL_YELLOW = (220, 184, 10)
 ppc_power = 253
 ppc_batt = 1000
-title = True
-multiplayer_setup = False
+game_mode = "title"
 selected = 0
+temp_new_blocks = []
 new_blocks = []
 users = []
 ip = "localhost"
@@ -438,8 +438,9 @@ def draw_multiplayer(winobj, port, ip, nick):
 
 # main cycle
 while 1:
-    if not title and not multiplayer_setup:
-        if tick == 45:
+    if game_mode == "singleplayer" or game_mode == "multiplayer":
+        temp_new_blocks = []
+        if tick == 44:
             if mode == "building" and ppc_power != 0:
                 ppc_power -= 1
             tick = 0
@@ -451,7 +452,7 @@ while 1:
                     power_capacity += 250
                 elif tile["tile"] == "drill" and tile["part"] == 1:
                     power_capacity -= 25
-                if tile["tile"] == "grass" and random.randint(0, 25) == 0 and tile["building"] == None:
+                if tile["tile"] == "grass" and random.randint(0, 25) == 0 and tile["building"] == None and game_mode == "singleplayer":
                     world[tile_id]["tile"] = "leaves"
         if tooltip_tick != -1:
             tooltip_tick -= 1
@@ -701,13 +702,17 @@ while 1:
                                 inventory[item_id]["amount"] += 1
                                 added = True
                                 world[x + y * world_len]["tile"] = "grass"
+                                temp_new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})                                
                                 player_state_timer = 5
                                 player_state = "dig_active"
+                                print(1)
                         if not(added) and len(inventory) < 30:
                             inventory.append({"item": ("bio", "leaves"), "amount": 1, "info": ("Leaves", "Natural material, but", "has a little radiation in", "it. Can be transformed", "to Biofiber")})
                             world[x + y * world_len]["tile"] = "grass"
+                            temp_new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
                             player_state_timer = 5
                             player_state = "dig_active"
+                            print(1)
 
         if pos[0] >= world_len:
             pos[0] = world_len - 1
@@ -742,7 +747,7 @@ while 1:
         pg.display.update()
         clock.tick(45)
         tick += 1
-    elif title and not multiplayer_setup:
+    elif game_mode == "title":
         for evt in pg.event.get():
             if evt.type == pg.QUIT:
                 pg.quit()
@@ -751,11 +756,10 @@ while 1:
                 mouse_pos = pg.mouse.get_pos()
                 if mouse_pos[0] >= cell_size * 4 and mouse_pos[0] <= cell_size * 8:
                     if mouse_pos[1] >= cell_size * 12 and mouse_pos[1] <= cell_size * 12.5:
-                        title = False
+                        game_mode = "singleplayer"
                         tick = -1
                     if mouse_pos[1] >= cell_size * 14 and mouse_pos[1] <= cell_size * 14.5:
-                        title = False
-                        multiplayer_setup = True
+                        game_mode = "multiplayer_setup"
                         tick = -1
         draw_title(window)
         cursor_pos = pg.mouse.get_pos()
@@ -763,7 +767,7 @@ while 1:
         pg.display.update()
         clock.tick(45)
         tick += 1
-    elif not title and multiplayer_setup:
+    elif game_mode == "multiplayer_setup":
         for evt in pg.event.get():
             if evt.type == pg.QUIT:
                 pg.quit()
@@ -811,13 +815,12 @@ while 1:
                         print("Failed to connect")
 
                     def socketThread():
-                        global clientSocket, running_thread, users, pos, world, new_blocks, starting_blocks
+                        global clientSocket, running_thread, users, pos, world, new_blocks, starting_blocks, temp_new_blocks
 
                         while running_thread:
-                            # try:
-                            data = {"nickname": nick, "self": pos, "new_blocks": new_blocks}
+                            #try:
+                            data = {"nickname": nick, "self": pos, "new_blocks": new_blocks, "temp_new_blocks":temp_new_blocks}
                             clientSocket.send((json.dumps(data) + "=").encode())
-
                             received = ""
                             while True:
                                 received += clientSocket.recv(8192).decode("utf-8")
@@ -829,16 +832,19 @@ while 1:
                             received = json.loads(received)
                             users = received["users"]
                             received_new_blocks = received["new_blocks"]
+                            received_temp_new_blocks = received["temp_new_blocks"]
                             for block in received_new_blocks:
                                 world[block["id"]] = block["tile"]
-                            # except:
-                            # break
+                            for block in received_temp_new_blocks:
+                                world[block["id"]] = block["tile"]
+                                print(block)
+                            #except:
+                            #    break
                         print("Connection lost or server closed")
 
                     socketTh = threading.Thread(target=socketThread)
                     socketTh.start()
-                    multiplayer_setup = False
-                    title = False
+                    game_mode = "multiplayer"
                 elif evt.key == pg.K_BACKSPACE:
                     if selected == 0:
                         port = port[:-1]

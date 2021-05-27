@@ -59,6 +59,7 @@ class Client:
                         break
                 data = json.loads(received)
                 for block in data["new_blocks"]:
+                    world[block["id"]] = block["tile"]
                     new_blocks.append(block)
                 for temp_block in data["temp_new_blocks"]:
                     world[temp_block["id"]] = temp_block["tile"]

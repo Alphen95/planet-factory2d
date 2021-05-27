@@ -21,7 +21,7 @@ new_blocks = []
 users = []
 ip = "localhost"
 port = "8000"
-nick = "Player"
+nick = "Player{}".format(random.randint(0,9999))
 world_applied = False
 category = 0
 
@@ -367,7 +367,7 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
             text_rot = dosfont.render(str(current_item[1]), True, (0, 0, 0))
             text_tile3 = dosfont.render(">CURRENT_ITM", True, (0, 0, 0))
             text_item = dosfont.render(str(current_item[0]), True, (0, 0, 0))
-            text_cancel = dosfont.render(str("0>CANCEL"), True, (0, 0, 0))
+            text_cancel = dosfont.render(str("5>CANCEL"), True, (0, 0, 0))
             winobj.blit(text_tile, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20 * 5) - cell_size * 4) * 1.25))))
             winobj.blit(text_tile2, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20) - cell_size * 4) * 1.25))))
             winobj.blit(text_rot, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 2) - cell_size * 4) * 1.25)))
@@ -381,7 +381,7 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
                 text_line3 = dosfont.render("2>LOGIC", True, (0, 0, 0))
                 text_line4 = dosfont.render("3>LOGISITC", True, (0, 0, 0))
                 text_line5 = dosfont.render("4>PROCESSING", True, (0, 0, 0))
-                text_line6 = dosfont.render("5>MISC", True, (0, 0, 0))
+                text_line6 = dosfont.render("5>DISASSEMBLE", True, (0, 0, 0))
                 winobj.blit(text_line1, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20 * 5) - cell_size * 4) * 1.25))))
                 winobj.blit(text_line2, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20) - cell_size * 4) * 1.25))))
                 winobj.blit(text_line3, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 2) - cell_size * 4) * 1.25)))
@@ -532,9 +532,15 @@ while 1:
                         current_item[1] += 90
                     else:
                         current_item[1] = 0
-                elif keys[pg.K_5] and current_item[0] != "":
+                elif keys[pg.K_5] and category != 0 or keys[pg.K_5] and current_item[0] != "":
                     category = 0
                     current_item = ["",0]
+                elif keys[pg.K_5] and category == 0:
+                    current_item = ["disassemble",0]                
+                elif keys[pg.K_1] and category == 0:
+                    category = 1            
+                elif keys[pg.K_1] and category == 1:
+                    current_item = ["drill",0]                           
             elif evt.type == pg.MOUSEBUTTONDOWN:
                 coords = evt.pos
                 # tooltip on middle-click
@@ -630,6 +636,46 @@ while 1:
                                     world[x + ((y + 1) * world_len)]["part"] = 2
                                     new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
                                     new_blocks.append({"id": x + ((y + 1) * world_len), "tile": world[x + ((y + 1) * world_len)]})
+                        elif current_item[0] == "disassemble":
+                            print("a")
+                            if world[x + (y * world_len)]["building"] == "drill" and world[(x + 1) + (y * world_len)]["building"] == "drill" and world[x + (y * world_len)]["part"] == 1 and world[(x + 1) + (y * world_len)]["part"] == 2:
+                                world[x + (y * world_len)]["building"] = None
+                                world[(x + 1) + (y * world_len)]["building"] = None
+                                world[x + (y * world_len)]["rotation"] = 0
+                                world[(x + 1) + (y * world_len)]["rotation"] = 0
+                                world[x + (y * world_len)]["part"] = 0
+                                world[(x + 1) + (y * world_len)]["part"] = 0
+                                new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                new_blocks.append({"id": (x + 1) + (y * world_len), "tile": world[(x + 1) + (y * world_len)]})
+                            if world[x + (y * world_len)]["building"] == "drill" and world[x + ((y - 1) * world_len)]["building"] == "drill" and world[x + (y * world_len)]["part"] == 1 and world[x + ((y - 1) * world_len)]["part"] == 2:
+                                print(1)
+                                world[x + (y * world_len)]["building"] = None
+                                world[x + ((y - 1) * world_len)]["building"] = None
+                                world[x + (y * world_len)]["rotation"] = 0
+                                world[x + ((y - 1) * world_len)]["rotation"] = 0
+                                world[x + (y * world_len)]["part"] = 0
+                                world[x + ((y - 1) * world_len)]["part"] = 0
+                                new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                new_blocks.append({"id": x + ((y - 1) * world_len), "tile": world[x + ((y - 1) * world_len)]})
+                            if  world[x + (y * world_len)]["building"] == "drill" and world[(x - 1) + (y * world_len)]["building"] == "drill" and world[x + (y * world_len)]["part"] == 1 and world[(x - 1) + (y * world_len)]["part"] == 2:
+                                world[x + (y * world_len)]["building"] = None
+                                world[(x - 1) + (y * world_len)]["building"] = None
+                                world[x + (y * world_len)]["rotation"] = 0
+                                world[(x - 1) + (y * world_len)]["rotation"] = 0
+                                world[x + (y * world_len)]["part"] = 0
+                                world[(x - 1) + (y * world_len)]["part"] = 0
+                                new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                new_blocks.append({"id": (x - 1) + (y * world_len), "tile": world[(x - 1) + (y * world_len)]})
+                            if world[x + (y * world_len)]["building"] == "drill" and world[x + ((y + 1) * world_len)]["building"] == "drill" and world[x + (y * world_len)]["part"] == 1 and world[x + ((y +  1) * world_len)]["part"] == 2:
+                                print(2)
+                                world[x + (y * world_len)]["building"] = None
+                                world[x + ((y + 1) * world_len)]["building"] = None
+                                world[x + (y * world_len)]["rotation"] = 0
+                                world[x + ((y + 1) * world_len)]["rotation"] = 0
+                                world[x + (y * world_len)]["part"] = 0
+                                world[x + ((y + 1) * world_len)]["part"] = 0
+                                new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                new_blocks.append({"id": x + ((y + 1) * world_len), "tile": world[x + ((y + 1) * world_len)]})
                 elif evt.button == 2:
                     tooltip_tile = true_visible_part[x + y * 20]
                     tooltip_tick = 125

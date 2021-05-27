@@ -23,6 +23,7 @@ ip = "localhost"
 port = "8000"
 nick = "Player"
 world_applied = False
+category = 0
 
 ui = {
     "tooltip": pg.image.load(os.path.join("res", "ui", "tooltip_box.png")),
@@ -122,7 +123,7 @@ tooltip_tile = {}
 menu = "hidden"
 menu_tick = 0
 inventory = [{"item": ("ingot", "copper"), "amount": 64, "info": ("Copper ingot", "Just a regular copper", "ingot. Used to craft", "other things.", "")}]
-current_item = ["drill", 90]
+current_item = ["", 0]
 mode = "!building"
 power_capacity = 0
 facing = 0
@@ -299,9 +300,9 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
         else:
             y1 -= y_borders[0]
         if tick > 21:
-            winobj.blit(pg.transform.scale(pg.transform.flip(player["default"][1], player_props[0], False), (cell_size * 2, cell_size * 2)), ((x1 - 1) * cell_size, (y1 - 1) * cell_size))
+            winobj.blit(pg.transform.scale(pg.transform.flip(player[user[2]][1], user[3], False), (cell_size * 2, cell_size * 2)), ((x1 - 1) * cell_size, (y1 - 1) * cell_size))
         elif tick <= 21:
-            winobj.blit(pg.transform.scale(pg.transform.flip(player["default"][0], player_props[0], False), (cell_size * 2, cell_size * 2)), ((x1 - 1) * cell_size, (y1 - 1) * cell_size))
+            winobj.blit(pg.transform.scale(pg.transform.flip(player[user[2]][0], user[3], False), (cell_size * 2, cell_size * 2)), ((x1 - 1) * cell_size, (y1 - 1) * cell_size))
         text_name = dosfont.render(user[1], True, (0, 0, 0))
         winobj.blit(text_name, ((x1 - 1) * cell_size, (y1 - 1) * cell_size))
     if tooltip_props[0] != -1 and tooltip_props[1] != {}:
@@ -360,31 +361,72 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
 
     if edit_mode:
         winobj.blit(pg.transform.scale(pg.transform.rotate(ui["ppc"], 0), (cell_size * 6, cell_size * 12)), (5, screen_size[1] + 10 - cell_size * 8))
-        if ppc_power <= ppc_batt * 0.01:
-            winobj.blit(pg.transform.scale(pg.transform.rotate(ui["bat"]["0"], 0), (int(cell_size * 4.75), int(cell_size * 4.75))), (cell_size * 0.65, screen_size[1] - cell_size * 8.75))
-        elif ppc_power <= ppc_batt * 0.25:
-            winobj.blit(pg.transform.scale(pg.transform.rotate(ui["bat"]["25"], 0), (int(cell_size * 4.75), int(cell_size * 4.75))), (cell_size * 0.65, screen_size[1] - cell_size * 8.75))
-        elif ppc_power <= ppc_batt * 0.5:
-            winobj.blit(pg.transform.scale(pg.transform.rotate(ui["bat"]["50"], 0), (int(cell_size * 4.75), int(cell_size * 4.75))), (cell_size * 0.65, screen_size[1] - cell_size * 8.75))
-        if tick >= 22:
-            if ppc_power <= ppc_batt * 0.12:
-                winobj.blit(pg.transform.scale(pg.transform.rotate(ui["bat"]["0"], 0), (int(cell_size * 4.75), int(cell_size * 4.75))), (cell_size * 0.65, screen_size[1] - cell_size * 8.75))
-            elif ppc_power <= ppc_batt * 0.37 and ppc_power >= ppc_batt * 0.25:
-                winobj.blit(pg.transform.scale(pg.transform.rotate(ui["bat"]["25"], 0), (int(cell_size * 4.75), int(cell_size * 4.75))), (cell_size * 0.65, screen_size[1] - cell_size * 8.75))
-        if ppc_power > 0:
+        if current_item[0] != "":
             text_tile = dosfont.render(">ROTATE: [R]", True, (0, 0, 0))
             text_tile2 = dosfont.render(">CURRENT_ROT", True, (0, 0, 0))
             text_rot = dosfont.render(str(current_item[1]), True, (0, 0, 0))
-            text_tile3 = dosfont.render("CURRENT_ITM", True, (0, 0, 0))
+            text_tile3 = dosfont.render(">CURRENT_ITM", True, (0, 0, 0))
             text_item = dosfont.render(str(current_item[0]), True, (0, 0, 0))
+            text_cancel = dosfont.render(str("0>CANCEL"), True, (0, 0, 0))
             winobj.blit(text_tile, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20 * 5) - cell_size * 4) * 1.25))))
             winobj.blit(text_tile2, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20) - cell_size * 4) * 1.25))))
             winobj.blit(text_rot, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 2) - cell_size * 4) * 1.25)))
             winobj.blit(text_tile3, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 3) - cell_size * 4) * 1.25)))
             winobj.blit(text_item, (int(cell_size * 1.5), (screen_size[1] + 15 + (int(((12 * screen_size[1] / (40 * 20)) * 4) - cell_size * 4) * 1.25))))
+            winobj.blit(text_cancel, (int(cell_size * 1.5), (screen_size[1] + 15 + (int(((12 * screen_size[1] / (40 * 20)) * 5) - cell_size * 4) * 1.25))))
         else:
-            text_tile = dosfont.render("NO POWER", True, (0, 0, 0))
-            winobj.blit(text_tile, (cell_size * 1.5, screen_size[1] + 15 + (int(12 * screen_size[1] / (40 * 20)) * 2) - cell_size * 4))
+            if category == 0:
+                text_line1 = dosfont.render("CATEGORY: MAIN", True, (0, 0, 0))
+                text_line2 = dosfont.render("1>MINING", True, (0, 0, 0))
+                text_line3 = dosfont.render("2>LOGIC", True, (0, 0, 0))
+                text_line4 = dosfont.render("3>LOGISITC", True, (0, 0, 0))
+                text_line5 = dosfont.render("4>PROCESSING", True, (0, 0, 0))
+                text_line6 = dosfont.render("5>MISC", True, (0, 0, 0))
+                winobj.blit(text_line1, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20 * 5) - cell_size * 4) * 1.25))))
+                winobj.blit(text_line2, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20) - cell_size * 4) * 1.25))))
+                winobj.blit(text_line3, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 2) - cell_size * 4) * 1.25)))
+                winobj.blit(text_line4, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 3) - cell_size * 4) * 1.25)))
+                winobj.blit(text_line5, (int(cell_size * 1.5), (screen_size[1] + 15 + (int(((12 * screen_size[1] / (40 * 20)) * 4) - cell_size * 4) * 1.25))))
+                winobj.blit(text_line6, (int(cell_size * 1.5), (screen_size[1] + 15 + (int(((12 * screen_size[1] / (40 * 20)) * 5) - cell_size * 4) * 1.25))))   
+            elif category == 1:
+                text_line1 = dosfont.render("CATEGORY: MINING", True, (0, 0, 0))
+                text_line2 = dosfont.render("1>DRILL_MK1", True, (0, 0, 0))
+                text_line3 = dosfont.render("2>", True, (0, 0, 0))
+                text_line4 = dosfont.render("3>", True, (0, 0, 0))
+                text_line5 = dosfont.render("4>", True, (0, 0, 0))
+                text_line6 = dosfont.render("5>BACK", True, (0, 0, 0))
+                winobj.blit(text_line1, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20 * 5) - cell_size * 4) * 1.25))))
+                winobj.blit(text_line2, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20) - cell_size * 4) * 1.25))))
+                winobj.blit(text_line3, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 2) - cell_size * 4) * 1.25)))
+                winobj.blit(text_line4, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 3) - cell_size * 4) * 1.25)))
+                winobj.blit(text_line5, (int(cell_size * 1.5), (screen_size[1] + 15 + (int(((12 * screen_size[1] / (40 * 20)) * 4) - cell_size * 4) * 1.25))))
+                winobj.blit(text_line6, (int(cell_size * 1.5), (screen_size[1] + 15 + (int(((12 * screen_size[1] / (40 * 20)) * 5) - cell_size * 4) * 1.25))))     
+            elif category == 1:
+                text_line1 = dosfont.render("CATEGORY: LOGIC", True, (0, 0, 0))
+                text_line2 = dosfont.render("1>", True, (0, 0, 0))
+                text_line3 = dosfont.render("2>", True, (0, 0, 0))
+                text_line4 = dosfont.render("3>", True, (0, 0, 0))
+                text_line5 = dosfont.render("4>", True, (0, 0, 0))
+                text_line6 = dosfont.render("5>BACK", True, (0, 0, 0))
+                winobj.blit(text_line1, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20 * 5) - cell_size * 4) * 1.25))))
+                winobj.blit(text_line2, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20) - cell_size * 4) * 1.25))))
+                winobj.blit(text_line3, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 2) - cell_size * 4) * 1.25)))
+                winobj.blit(text_line4, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 3) - cell_size * 4) * 1.25)))
+                winobj.blit(text_line5, (int(cell_size * 1.5), (screen_size[1] + 15 + (int(((12 * screen_size[1] / (40 * 20)) * 4) - cell_size * 4) * 1.25))))
+                winobj.blit(text_line6, (int(cell_size * 1.5), (screen_size[1] + 15 + (int(((12 * screen_size[1] / (40 * 20)) * 5) - cell_size * 4) * 1.25))))     
+            elif category == 1:
+                text_line1 = dosfont.render("CATEGORY: MINING", True, (0, 0, 0))
+                text_line2 = dosfont.render("1>CONV_BELT_MK1", True, (0, 0, 0))
+                text_line3 = dosfont.render("2>", True, (0, 0, 0))
+                text_line4 = dosfont.render("3>", True, (0, 0, 0))
+                text_line5 = dosfont.render("4>", True, (0, 0, 0))
+                text_line6 = dosfont.render("5>BACK", True, (0, 0, 0))
+                winobj.blit(text_line1, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20 * 5) - cell_size * 4) * 1.25))))
+                winobj.blit(text_line2, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20) - cell_size * 4) * 1.25))))
+                winobj.blit(text_line3, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 2) - cell_size * 4) * 1.25)))
+                winobj.blit(text_line4, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 3) - cell_size * 4) * 1.25)))
+                winobj.blit(text_line5, (int(cell_size * 1.5), (screen_size[1] + 15 + (int(((12 * screen_size[1] / (40 * 20)) * 4) - cell_size * 4) * 1.25))))
+                winobj.blit(text_line6, (int(cell_size * 1.5), (screen_size[1] + 15 + (int(((12 * screen_size[1] / (40 * 20)) * 5) - cell_size * 4) * 1.25))))                 
     if menu_props[1] != "hidden":
         ypos = 0
         xpos = 0
@@ -490,6 +532,9 @@ while 1:
                         current_item[1] += 90
                     else:
                         current_item[1] = 0
+                elif keys[pg.K_5] and current_item[0] != "":
+                    category = 0
+                    current_item = ["",0]
             elif evt.type == pg.MOUSEBUTTONDOWN:
                 coords = evt.pos
                 # tooltip on middle-click
@@ -819,7 +864,7 @@ while 1:
 
                         while running_thread:
                             #try:
-                            data = {"nickname": nick, "self": pos, "new_blocks": new_blocks, "temp_new_blocks":temp_new_blocks}
+                            data = {"nickname": nick, "self": [pos,player_state,facing], "new_blocks": new_blocks, "temp_new_blocks":temp_new_blocks}
                             clientSocket.send((json.dumps(data) + "=").encode())
                             received = ""
                             while True:
@@ -837,7 +882,6 @@ while 1:
                                 world[block["id"]] = block["tile"]
                             for block in received_temp_new_blocks:
                                 world[block["id"]] = block["tile"]
-                                print(block)
                             #except:
                             #    break
                         print("Connection lost or server closed")

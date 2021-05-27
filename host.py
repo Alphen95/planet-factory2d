@@ -36,7 +36,8 @@ class Client:
         self.socket = socket
         self.socket.settimeout(5)
         self.nickname = nickname
-        self.inventory = []
+        self.rot = 0
+        self.state = "default"
         self.id = ID
         self.pos = [0, 0]
         self.thread = threading.Thread(target=self.thread)
@@ -61,11 +62,12 @@ class Client:
                     new_blocks.append(block)
                 for temp_block in data["temp_new_blocks"]:
                     world[temp_block["id"]] = temp_block["tile"]
-                    print(temp_block)
-                self.pos = data["self"]
-                if temp_new_blocks != []: print(temp_new_blocks)
+                    temp_new_blocks.append(temp_block)
+                self.pos = data["self"][0]
+                self.state = data["self"][1]
+                self.rot = data["self"][2]
                 reply = {"new_blocks": new_blocks,"temp_new_blocks":temp_new_blocks}
-                reply["users"] = [[c.pos, c.nickname] for c in clients if c.id != self.id]
+                reply["users"] = [[c.pos, c.nickname,c.state,c.rot] for c in clients if c.id != self.id]
                 self.socket.send((json.dumps(reply) + "=").encode())
             except Exception as ex:
                 print("[EXCEPTION]", ex)
@@ -91,11 +93,10 @@ def globalUpdateCycle():
                     power_capacity += 250
                 elif tile["tile"] == "drill" and tile["part"] == 1:
                     power_capacity -= 25
-                if tile["tile"] == "grass" and random.randint(0, 25) == 0 and tile["building"] == None: 
+                if tile["tile"] == "grass" and tile["building"] == None: #and random.randint(0, 25) == 0
                     world[tile_id]["tile"] = "leaves"
                     #print("a")
                     temp_new_blocks.append({"id": tile_id, "tile": world[tile_id]})
-                    print(temp_new_blocks)
         clock.tick(45)
         tick += 1
 

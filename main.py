@@ -24,11 +24,12 @@ port = "8000"
 nick = "Player{}".format(random.randint(0,9999))
 world_applied = False
 category = 0
-chat = [{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"}]
+chat = []
 recent_messages = []
 current_message = ""
 send = False
 chat_open = False
+recepies = [{"name":"Iron ingot","required_text":"Iron ore","output_text":"Iron ingot","required":[[("unprocessed","iron"),1]],"output":{"item": ("ingot", "iron"), "amount": 1, "info": ("Iron ingot", "Just a regular iron", "ingot. Used to craft", "other things.", "")}},{"name":"Copper ingot","required_text":"Copper ore","output_text":"Copper ingot","required":[[("unprocessed","copper"),1]],"output":{"item": ("ingot", "copper"), "amount": 1, "info": ("Copper ingot", "Just a regular copper", "ingot. Used to craft", "other things.", "")}}]
 
 ui = {
     "tooltip": pg.image.load(os.path.join("res", "ui", "tooltip_box.png")),
@@ -457,6 +458,21 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
                     winobj.blit(text_amount, (xpos + 10 * x + (cell_size * 2) * x + (cell_size * 2) - 11, ypos + 10 * y + (cell_size * 2) * y + (cell_size * 2) - 11))
                 except:
                     pass
+        x = 0
+        y = 0
+        for recepie in recepies:
+            if x >9:
+                x = 0
+                y +=1
+            pg.draw.rect(winobj,(0,0,0),(xpos+10+y*155,ypos+310+x*60,150,50))
+            pg.draw.rect(winobj,(200,200,200),(xpos+10+y*157,ypos+310+x*58,148,48))
+            text_name = dosfont.render(recepie["name"], True, (0,0,0))
+            winobj.blit(text_name, (xpos+10+y*160,ypos+310+x*60))
+            text_required = dosfont.render("Need:"+recepie["required_text"], True, (0,0,0))
+            winobj.blit(text_required, (xpos+10+y*160,ypos+325+x*60))
+            text_result = dosfont.render("Will give: "+recepie["output_text"], True, (0,0,0))
+            winobj.blit(text_result, (xpos+10+y*160,ypos+340+x*60))            
+            x+=1
     if chat_open:
         pg.draw.rect(winobj,(100,100,100),(0,0,screen_size[1],300))
         if len(chat) <=14:
@@ -493,6 +509,14 @@ def draw_title(winobj):
     winobj.blit(text_singleplayer, (cell_size * 4, cell_size * 12))
     winobj.blit(text_multiplayer, (cell_size * 4, cell_size * 14))
 
+def draw_splash(winobj,splash):
+    for i in range(0, 64):
+        for i1 in range(0, 64):
+            winobj.blit(pg.transform.scale(ui["title"], (cell_size * 2, cell_size * 2)), (i1 * (cell_size * 2), i * (cell_size * 2)))
+    text_splash1 = dosfontbig.render(splash[0], True, (0, 255, 0))
+    text_splash2 = dosfontbig.render(splash[1], True, (0, 255, 0))
+    winobj.blit(text_splash1,(cell_size*5,cell_size*5))
+    winobj.blit(text_splash2,(cell_size*4,cell_size*6))
 
 def draw_multiplayer(winobj, port, ip, nick):
     for i in range(0, 64):
@@ -615,6 +639,44 @@ while 1:
                     for y1 in range(y_borders[0], y_borders[1]):
                         true_visible_part.append(visible_part[str(x1) + "_" + str(y1)])
                 if evt.button == 1:
+                    if menu == "open":
+                        x = 0
+                        y = 0
+                        for recepie in recepies: #(xpos+10+y*155,ypos+310+x*60,150,50)
+                            if x > 9:
+                                x = 0
+                                y += 1
+                            can_craft = False
+                            added = False
+                            item_ids = []
+                            ids_to_pop = []
+                            if coords[0] >= 10+y*155 and coords[0] <= 10+y*155+150 and coords[1] >=310+x*60 and coords[1] < 310+x*60+50 and len(inventory) < 30:
+                                for item in recepie["required"]:
+                                    for inv_item_id, inv_item in enumerate(inventory):
+                                        if item[0] == inv_item["item"] and item[1] <= inv_item["amount"]:
+                                            can_craft = True
+                                            item_ids.append((inv_item_id,item[1]))
+                                            break
+                                    if can_craft == False:  
+                                        break
+                                if can_craft:
+                                    for item_id in item_ids:
+                                        item = inventory[item_id[0]]
+                                        if item["amount"] > item_id[1]:
+                                            item["amount"] -= item_id[1]
+                                        else:
+                                            ids_to_pop.append(item_id[0])
+                                    for id_to_pop in ids_to_pop:
+                                        inventory.pop(id_to_pop)
+                                    for item_id, item in enumerate(inventory):
+                                        if item["item"] == recepie["output"]["item"]  and item["amount"] < 200:
+                                            inventory[item_id]["amount"] += 1
+                                            added = True
+                                    if not(added) and len(inventory) < 30:
+                                        inventory.append(recepie["output"])                                       
+                                    
+                                    
+                            x+=1
                     x = int(coords[0] / cell_size)
                     y = int(coords[1] / cell_size)
                     if x_borders[0] < 0:
@@ -685,42 +747,83 @@ while 1:
                                     new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
                                     new_blocks.append({"id": x + ((y + 1) * world_len), "tile": world[x + ((y + 1) * world_len)]})
                         elif current_item[0] == "disassemble":
-                            if world[x + (y * world_len)]["building"] == "drill" and world[(x + 1) + (y * world_len)]["building"] == "drill" and world[x + (y * world_len)]["part"] == 1 and world[(x + 1) + (y * world_len)]["part"] == 2:
-                                world[x + (y * world_len)]["building"] = None
-                                world[(x + 1) + (y * world_len)]["building"] = None
-                                world[x + (y * world_len)]["rotation"] = 0
-                                world[(x + 1) + (y * world_len)]["rotation"] = 0
-                                world[x + (y * world_len)]["part"] = 0
-                                world[(x + 1) + (y * world_len)]["part"] = 0
-                                new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
-                                new_blocks.append({"id": (x + 1) + (y * world_len), "tile": world[(x + 1) + (y * world_len)]})
-                            if world[x + (y * world_len)]["building"] == "drill" and world[x + ((y - 1) * world_len)]["building"] == "drill" and world[x + (y * world_len)]["part"] == 1 and world[x + ((y - 1) * world_len)]["part"] == 2:
-                                world[x + (y * world_len)]["building"] = None
-                                world[x + ((y - 1) * world_len)]["building"] = None
-                                world[x + (y * world_len)]["rotation"] = 0
-                                world[x + ((y - 1) * world_len)]["rotation"] = 0
-                                world[x + (y * world_len)]["part"] = 0
-                                world[x + ((y - 1) * world_len)]["part"] = 0
-                                new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
-                                new_blocks.append({"id": x + ((y - 1) * world_len), "tile": world[x + ((y - 1) * world_len)]})
-                            if  world[x + (y * world_len)]["building"] == "drill" and world[(x - 1) + (y * world_len)]["building"] == "drill" and world[x + (y * world_len)]["part"] == 1 and world[(x - 1) + (y * world_len)]["part"] == 2:
-                                world[x + (y * world_len)]["building"] = None
-                                world[(x - 1) + (y * world_len)]["building"] = None
-                                world[x + (y * world_len)]["rotation"] = 0
-                                world[(x - 1) + (y * world_len)]["rotation"] = 0
-                                world[x + (y * world_len)]["part"] = 0
-                                world[(x - 1) + (y * world_len)]["part"] = 0
-                                new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
-                                new_blocks.append({"id": (x - 1) + (y * world_len), "tile": world[(x - 1) + (y * world_len)]})
-                            if world[x + (y * world_len)]["building"] == "drill" and world[x + ((y + 1) * world_len)]["building"] == "drill" and world[x + (y * world_len)]["part"] == 1 and world[x + ((y +  1) * world_len)]["part"] == 2:
-                                world[x + (y * world_len)]["building"] = None
-                                world[x + ((y + 1) * world_len)]["building"] = None
-                                world[x + (y * world_len)]["rotation"] = 0
-                                world[x + ((y + 1) * world_len)]["rotation"] = 0
-                                world[x + (y * world_len)]["part"] = 0
-                                world[x + ((y + 1) * world_len)]["part"] = 0
-                                new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
-                                new_blocks.append({"id": x + ((y + 1) * world_len), "tile": world[x + ((y + 1) * world_len)]})
+                            if world[x + (y * world_len)]["building"] == "drill" and world[x + (y * world_len)]["rotation"] == 0:
+                                if world[x + (y * world_len)]["part"] == 1:
+                                    world[x + (y * world_len)]["building"] = None
+                                    world[(x + 1) + (y * world_len)]["building"] = None
+                                    world[x + (y * world_len)]["rotation"] = 0
+                                    world[(x + 1) + (y * world_len)]["rotation"] = 0
+                                    world[x + (y * world_len)]["part"] = 0
+                                    world[(x + 1) + (y * world_len)]["part"] = 0
+                                    new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                    new_blocks.append({"id": (x + 1) + (y * world_len), "tile": world[(x + 1) + (y * world_len)]})
+                                else:
+                                    world[x + (y * world_len)]["building"] = None
+                                    world[(x - 1) + (y * world_len)]["building"] = None
+                                    world[x + (y * world_len)]["rotation"] = 0
+                                    world[(x - 1) + (y * world_len)]["rotation"] = 0
+                                    world[x + (y * world_len)]["part"] = 0
+                                    world[(x - 1) + (y * world_len)]["part"] = 0
+                                    new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                    new_blocks.append({"id": (x - 1) + (y * world_len), "tile": world[(x + 1) + (y * world_len)]})                                    
+                            if world[x + (y * world_len)]["building"] == "drill" and world[x + (y * world_len)]["rotation"] == 90:
+                                if world[x + (y * world_len)]["part"] == 1:
+                                    world[x + (y * world_len)]["building"] = None
+                                    world[x + ((y - 1) * world_len)]["building"] = None
+                                    world[x + (y * world_len)]["rotation"] = 0
+                                    world[x + ((y - 1) * world_len)]["rotation"] = 0
+                                    world[x + (y * world_len)]["part"] = 0
+                                    world[x + ((y - 1) * world_len)]["part"] = 0
+                                    new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                    new_blocks.append({"id": x + ((y - 1) * world_len), "tile": world[x + ((y - 1) * world_len)]})
+                                else:
+                                    world[x + (y * world_len)]["building"] = None
+                                    world[x + ((y + 1) * world_len)]["building"] = None
+                                    world[x + (y * world_len)]["rotation"] = 0
+                                    world[x + ((y + 1) * world_len)]["rotation"] = 0
+                                    world[x + (y * world_len)]["part"] = 0
+                                    world[x + ((y + 1) * world_len)]["part"] = 0
+                                    new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                    new_blocks.append({"id": x + ((y + 1) * world_len), "tile": world[x + ((y - 1) * world_len)]})                                    
+                            if world[x + (y * world_len)]["building"] == "drill" and world[x + (y * world_len)]["rotation"] == 180:
+                                if world[x + (y * world_len)]["part"] == 2:
+                                    world[x + (y * world_len)]["building"] = None
+                                    world[(x + 1) + (y * world_len)]["building"] = None
+                                    world[x + (y * world_len)]["rotation"] = 0
+                                    world[(x + 1) + (y * world_len)]["rotation"] = 0
+                                    world[x + (y * world_len)]["part"] = 0
+                                    world[(x + 1) + (y * world_len)]["part"] = 0
+                                    new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                    new_blocks.append({"id": (x + 1) + (y * world_len), "tile": world[(x + 1) + (y * world_len)]})
+                                else:
+                                    world[x + (y * world_len)]["building"] = None
+                                    world[(x - 1) + (y * world_len)]["building"] = None
+                                    world[x + (y * world_len)]["rotation"] = 0
+                                    world[(x - 1) + (y * world_len)]["rotation"] = 0
+                                    world[x + (y * world_len)]["part"] = 0
+                                    world[(x - 1) + (y * world_len)]["part"] = 0
+                                    new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                    new_blocks.append({"id": (x - 1) + (y * world_len), "tile": world[(x + 1) + (y * world_len)]})         
+                            if world[x + (y * world_len)]["building"] == "drill" and world[x + (y * world_len)]["rotation"] == 270:
+                                if world[x + (y * world_len)]["part"] == 2:
+                                    world[x + (y * world_len)]["building"] = None
+                                    world[x + ((y - 1) * world_len)]["building"] = None
+                                    world[x + (y * world_len)]["rotation"] = 0
+                                    world[x + ((y - 1) * world_len)]["rotation"] = 0
+                                    world[x + (y * world_len)]["part"] = 0
+                                    world[x + ((y - 1) * world_len)]["part"] = 0
+                                    new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                    new_blocks.append({"id": x + ((y - 1) * world_len), "tile": world[x + ((y - 1) * world_len)]})
+                                else:
+                                    world[x + (y * world_len)]["building"] = None
+                                    world[x + ((y + 1) * world_len)]["building"] = None
+                                    world[x + (y * world_len)]["rotation"] = 0
+                                    world[x + ((y + 1) * world_len)]["rotation"] = 0
+                                    world[x + (y * world_len)]["part"] = 0
+                                    world[x + ((y + 1) * world_len)]["part"] = 0
+                                    new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                    new_blocks.append({"id": x + ((y + 1) * world_len), "tile": world[x + ((y - 1) * world_len)]})  
+                            
                 elif evt.button == 2 and not(chat_open):
                     tooltip_tile = true_visible_part[x + y * 20]
                     tooltip_tick = 125
@@ -830,6 +933,17 @@ while 1:
                                 player_state = "dig_active"
                         if not(added) and len(inventory) < 30:
                             inventory.append({"item": ("unprocessed", "coal"), "amount": 1, "info": ("Coal", "Natural material.", "Good for making steel.", "", "")})
+                            player_state_timer = 5
+                            player_state = "dig_active"
+                    elif world[x + y * world_len]["tile"] == "resin_tree":
+                        for item_id, item in enumerate(inventory):
+                            if item["item"] == ("unprocessed", "resin") and item["amount"] < 200:
+                                inventory[item_id]["amount"] += 1
+                                added = True
+                                player_state_timer = 5
+                                player_state = "dig_active"
+                        if not(added) and len(inventory) < 30:
+                            inventory.append({"item": ("unprocessed", "resin"), "amount": 1, "info": ("Raw resin", "Natural material.", "Good for isolatin","wires.", "")})
                             player_state_timer = 5
                             player_state = "dig_active"
                     elif world[x + y * world_len]["tile"] == "leaves":
@@ -948,43 +1062,48 @@ while 1:
                         for new_block in new_blocks:
                             world[new_block["id"]] = new_block["tile"]
                     except:
-                        print("Failed to connect")
+                        game_mode = "error"
+                        splash = ["Error","Failed to connect, check IP and port"]
+                        break
                     chat = []
                     def socketThread():
-                        global clientSocket, running_thread, users, pos, world, new_blocks, starting_blocks, temp_new_blocks,chat, recent_messages, send, current_message
+                        global clientSocket, running_thread, users, pos, world, new_blocks, starting_blocks, temp_new_blocks,chat, recent_messages, send, current_message,game_mode,splash
 
                         while running_thread:
-                            #try:
-                            if send:
-                                data = {"nickname": nick, "self": [pos,player_state,facing], "new_blocks": new_blocks, "temp_new_blocks":temp_new_blocks,"msg":current_message}
-                                send = False
-                                current_message = ""
-                            else:
-                                data = {"nickname": nick, "self": [pos,player_state,facing], "new_blocks": new_blocks, "temp_new_blocks":temp_new_blocks,"msg":""}
-                            clientSocket.send((json.dumps(data) + "=").encode())
-                            received = ""
-                            while True:
-                                received += clientSocket.recv(8192).decode("utf-8")
-                                if not received:
-                                    running_thread = False
-                                if received[-1] == "=":
-                                    received = received[:-1]
-                                    break
-                            received = json.loads(received)
-                            users = received["users"]
-                            received_new_blocks = received["new_blocks"]
-                            received_temp_new_blocks = received["temp_new_blocks"]
-                            if chat != received["chat"]:
-                                sounds["msg"].play()
-                                recent_messages = [{"user":x["user"],"text":x["text"],"timer":90} for x in received["chat"] if x not in chat]
-                                chat = received["chat"]
-                            for block in received_new_blocks:
-                                world[block["id"]] = block["tile"]
-                            for block in received_temp_new_blocks:
-                                world[block["id"]] = block["tile"]
-                            #except:
-                            #    break
-                        print("Connection lost or server closed")
+                            try:
+                                if send:
+                                    data = {"nickname": nick, "self": [pos,player_state,facing], "new_blocks": new_blocks, "temp_new_blocks":temp_new_blocks,"msg":current_message}
+                                    send = False
+                                    current_message = ""
+                                else:
+                                    data = {"nickname": nick, "self": [pos,player_state,facing], "new_blocks": new_blocks, "temp_new_blocks":temp_new_blocks,"msg":""}
+                                clientSocket.send((json.dumps(data) + "=").encode())
+                                received = ""
+                                while True:
+                                    received += clientSocket.recv(8192).decode("utf-8")
+                                    if not received:
+                                        running_thread = False
+                                    if received[-1] == "=":
+                                        received = received[:-1]
+                                        break
+                                received = json.loads(received)
+                                users = received["users"]
+                                received_new_blocks = received["new_blocks"]
+                                received_temp_new_blocks = received["temp_new_blocks"]
+                                if chat != received["chat"]:
+                                    sounds["msg"].play()
+                                    recent_messages = [{"user":x["user"],"text":x["text"],"timer":90} for x in received["chat"] if x not in chat]
+                                    chat = received["chat"]
+                                for block in received_new_blocks:
+                                    world[block["id"]] = block["tile"]
+                                for block in received_temp_new_blocks:
+                                    world[block["id"]] = block["tile"]
+                            except:
+                                print("a")
+                                running_thread = False
+                        print("b")
+                        game_mode = "error"
+                        splash = ["Error","Server closed or connection closed"]
 
                     socketTh = threading.Thread(target=socketThread)
                     socketTh.start()
@@ -1009,3 +1128,14 @@ while 1:
         pg.display.update()
         clock.tick(45)
         tick += 1
+    elif game_mode == "error":
+        for evt in pg.event.get():
+            if evt.type == pg.QUIT:
+                pg.quit()
+                sys.exit()        
+        draw_splash(window,splash)
+        cursor_pos = pg.mouse.get_pos()
+        window.blit(pg.transform.scale(ui["cursor"], (cell_size * 2, cell_size * 2)), cursor_pos)
+        pg.display.update()
+        clock.tick(45)
+        tick += 1        

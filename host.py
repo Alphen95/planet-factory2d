@@ -136,6 +136,9 @@ for i in range(0, 4):
     elif i == 4:
         world[x + (y * world_len)] = {"item": None, "building": None, "tile": "tungsten_ore", "part": 0, "rotation": 0}
         starting_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+    elif i == 5:
+        world[x + (y * world_len)] = {"item": None, "building": None, "tile": "uranium_ore", "part": 0, "rotation": 0}
+        starting_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
 for i1 in range(0, int((world_len - 20) / 2)):
     x = random.randint(0, world_len - 1)
     y = random.randint(0, world_len - 1)
@@ -151,6 +154,9 @@ for i1 in range(0, int((world_len - 20) / 2)):
         starting_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
     elif i == 4:
         world[x + (y * world_len)] = {"item": None, "building": None, "tile": "tungsten_ore", "part": 0, "rotation": 0}
+        starting_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+    elif i == 5:
+        world[x + (y * world_len)] = {"item": None, "building": None, "tile": "uranium_ore", "part": 0, "rotation": 0}
         starting_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
 x = random.randint(0, world_len - 3)
 y = random.randint(0, world_len - 3)

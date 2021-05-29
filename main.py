@@ -29,7 +29,64 @@ recent_messages = []
 current_message = ""
 send = False
 chat_open = False
-recepies = [{"name":"Iron ingot","required_text":"Iron ore","output_text":"Iron ingot","required":[[("unprocessed","iron"),1]],"output":{"item": ("ingot", "iron"), "amount": 1, "info": ("Iron ingot", "Just a regular iron", "ingot. Used to craft", "other things.", "")}},{"name":"Copper ingot","required_text":"Copper ore","output_text":"Copper ingot","required":[[("unprocessed","copper"),1]],"output":{"item": ("ingot", "copper"), "amount": 1, "info": ("Copper ingot", "Just a regular copper", "ingot. Used to craft", "other things.", "")}}]
+recepies = [
+    {
+        "name":"Iron ingot",
+        "required_text":"Iron ore",
+        "output_text":"Iron ingot",
+        "required":[[("unprocessed","iron"),1]],
+        "output":{"item": ("ingot", "iron"), "amount": 1}
+    },
+    {
+        "name":"Copper ingot",
+        "required_text":"Copper ore",
+        "output_text":"Copper ingot",
+        "required":[[("unprocessed","copper"),1]],
+        "output":{"item": ("ingot", "copper"), "amount": 1}
+    },
+    {
+        "name":"Tungsten ingot",
+        "required_text":"Tungsten ore",
+        "output_text":"Tungsten ingot",
+        "required":[[("unprocessed","tungsten"),1]],
+        "output":{"item": ("ingot", "tungsten"), "amount": 1}
+    },
+    {
+        "name":"Resin sheet",
+        "required_text":"Sticky resin x2",
+        "output_text":"Resin sheet",
+        "required":[[("unprocessed","resin"),2]],
+        "output":{"item": ("ingot", "resin"), "amount": 1}
+    },
+    {
+        "name":"Iron plate",
+        "required_text":"Iron ingot",
+        "output_text":"Iron plate x 3",
+        "required":[[("ingot","iron"),1]],
+        "output":{"item": ("basic", "plate"), "amount": 3}
+    },
+    {
+        "name":"Iron rod",
+        "required_text":"Iron ingot",
+        "output_text":"Iron rod x2",
+        "required":[[("ingot","iron"),1]],
+        "output":{"item": ("basic", "rod"), "amount": 2}
+    }, 
+    {
+        "name":"Screws",
+        "required_text":"Iron ingot",
+        "output_text":"Screws x10",
+        "required":[[("ingot","iron"),1]],
+        "output":{"item": ("basic", "screws"), "amount": 10}
+    }, 
+    {
+        "name":"Copper wire",
+        "required_text":"Copper ingot",
+        "output_text":"Copper wire x5",
+        "required":[[("ingot","copper"),1]],
+        "output":{"item": ("basic", "wire_copper"), "amount": 5}
+    },     
+]
 
 ui = {
     "tooltip": pg.image.load(os.path.join("res", "ui", "tooltip_box.png")),
@@ -86,7 +143,8 @@ resources = {
         "resin": pg.image.load(os.path.join("res", "resources", "unprocessed", "resin.png")),
         "leaves": pg.image.load(os.path.join("res", "resources", "unprocessed", "leaves.png")),
         "tungsten": pg.image.load(os.path.join("res", "resources", "unprocessed", "tungsten.png")),
-        "coal": pg.image.load(os.path.join("res", "resources", "unprocessed", "coal.png"))
+        "coal": pg.image.load(os.path.join("res", "resources", "unprocessed", "coal.png")),
+        "uranium": pg.image.load(os.path.join("res", "resources", "unprocessed", "uranium.png"))
     },
     "electronics": {
         "re_bat_0": pg.image.load(os.path.join("res", "resources", "electronics", "re_bat", "0.png")),
@@ -98,6 +156,12 @@ resources = {
     "bio": {
         "biofiber": pg.image.load(os.path.join("res", "resources", "bio", "biofiber.png")),
         "leaves": pg.image.load(os.path.join("res", "resources", "bio", "leaves.png"))
+    },
+    "basic":{
+        "plate":pg.image.load(os.path.join("res", "resources", "basic", "iron_plate.png")),
+        "rod":pg.image.load(os.path.join("res", "resources", "basic", "iron_rod.png")),
+        "screws":pg.image.load(os.path.join("res", "resources", "basic", "screws.png")),
+        "wire":pg.image.load(os.path.join("res", "resources", "basic", "wire_copper.png"))
     }
 }
 
@@ -128,7 +192,7 @@ tooltip_tick = -1
 tooltip_tile = {}
 menu = "hidden"
 menu_tick = 0
-inventory = [{"item": ("ingot", "copper"), "amount": 64, "info": ("Copper ingot", "Just a regular copper", "ingot. Used to craft", "other things.", "")}]
+inventory = []
 current_item = ["", 0]
 mode = "!building"
 power_capacity = 0
@@ -172,7 +236,7 @@ for i in range(0, random.randint(5, 20)):
             world[x + xpos + ((y + ypos) * world_len)]["tile"] = random.choice(grass_chance)
 
 
-for i in range(0, 4):
+for i in range(0, 5):
     x = random.randint(0, world_len - 1)
     y = random.randint(0, world_len - 1)
     if i == 0 or i == 1:
@@ -187,10 +251,13 @@ for i in range(0, 4):
     elif i == 4:
         world[x + (y * world_len)] = {"item": None, "building": None, "tile": "tungsten_ore", "part": 0, "rotation": 0}
         log_file.write("[DEBUG] placed tungsten ore in x:{0} y:{1}, time:{2}\n".format(x, y, str(datetime.datetime.now())[:-7]))
+    elif i == 5:
+        world[x + (y * world_len)] = {"item": None, "building": None, "tile": "uranium_ore", "part": 0, "rotation": 0}
+        log_file.write("[DEBUG] placed uranium ore in x:{0} y:{1}, time:{2}\n".format(x, y, str(datetime.datetime.now())[:-7]))    
 for i1 in range(0, int((world_len - 20) / 2)):
     x = random.randint(0, world_len - 1)
     y = random.randint(0, world_len - 1)
-    i = random.randint(0, 4)
+    i = random.randint(0, 5)
     if i == 0 or i == 1:
         world[x + (y * world_len)] = {"item": None, "building": None, "tile": "coal_ore", "part": 0, "rotation": 0}
         log_file.write("[DEBUG] placed coal ore in x:{0} y:{1}, time:{2}\n".format(x, y, str(datetime.datetime.now())[:-7]))
@@ -203,6 +270,8 @@ for i1 in range(0, int((world_len - 20) / 2)):
     elif i == 4:
         world[x + (y * world_len)] = {"item": None, "building": None, "tile": "tungsten_ore", "part": 0, "rotation": 0}
         log_file.write("[DEBUG] placed tungsten ore in x:{0} y:{1}, time:{2}\n".format(x, y, str(datetime.datetime.now())[:-7]))
+    elif i == 5:
+        world[x + (y * world_len)] = {"item": None, "building": None, "tile": "uranium_ore", "part": 0, "rotation": 0}
 x = random.randint(0, world_len - 3)
 y = random.randint(0, world_len - 3)
 for i in range(0, 3):
@@ -260,6 +329,8 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
                 winobj.blit(pg.transform.scale(resources["raw_ore"]["copper"], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
             elif block == "tungsten_ore":
                 winobj.blit(pg.transform.scale(resources["raw_ore"]["tungsten"], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
+            elif block == "uranium_ore":
+                winobj.blit(pg.transform.scale(resources["raw_ore"]["uranium"], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))            
             elif block == "resin_tree":
                 winobj.blit(pg.transform.scale(ground_tiles[2], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
                 winobj.blit(pg.transform.scale(resources["raw_ore"]["resin"], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
@@ -345,6 +416,8 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
             winobj.blit(pg.transform.scale(resources["raw_ore"]["copper"], (cell_size, cell_size)), (xpos + 20, ypos + 10))
         elif block == "tungsten_ore":
             winobj.blit(pg.transform.scale(resources["raw_ore"]["tungsten"], (cell_size, cell_size)), (xpos + 20, ypos + 10))
+        elif block == "uranium_ore":
+            winobj.blit(pg.transform.scale(resources["raw_ore"]["uranium"], (cell_size, cell_size)), (xpos + 20, ypos + 10))        
         elif block == "resin_tree":
             winobj.blit(pg.transform.scale(ground_tiles[2], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
             winobj.blit(pg.transform.scale(resources["raw_ore"]["resin"], (cell_size, cell_size)), (xpos + 20, ypos + 10))
@@ -461,11 +534,11 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
         x = 0
         y = 0
         for recepie in recepies:
-            if x >9:
+            if x >6:
                 x = 0
                 y +=1
-            pg.draw.rect(winobj,(0,0,0),(xpos+10+y*155,ypos+310+x*60,150,50))
-            pg.draw.rect(winobj,(200,200,200),(xpos+10+y*157,ypos+310+x*58,148,48))
+            pg.draw.rect(winobj,(0,0,0),(xpos+10+y*153,ypos+310+x*60,150,50))
+            pg.draw.rect(winobj,(200,200,200),(xpos+10+y*157,ypos+310+x*60,148,48))
             text_name = dosfont.render(recepie["name"], True, (0,0,0))
             winobj.blit(text_name, (xpos+10+y*160,ypos+310+x*60))
             text_required = dosfont.render("Need:"+recepie["required_text"], True, (0,0,0))
@@ -537,6 +610,43 @@ def draw_multiplayer(winobj, port, ip, nick):
 # main cycle
 while 1:
     if game_mode == "singleplayer" or game_mode == "multiplayer":
+        for item in inventory:
+            if item["item"] ==("unprocessed","iron"):
+                item["info"] = ("Iron ore","Basic metal.","Used almost every-","where.","","")
+            elif item["item"] ==("unprocessed","copper"):
+                item["info"] = ("Copper ore","Electroconductive","and heat-conductive","metal.","","")
+            elif item["item"] ==("unprocessed","tungsten"):
+                item["info"] = ("Tungsten ore","Advanced metal. Used","to make complicated","circutry","","")
+            elif item["item"] ==("unprocessed","coal"):
+                item["info"] = ("Coal","Natural resource.","Good for making steel","","","")
+            elif item["item"] ==("unprocessed","resin"):
+                item["info"] = ("Sticky resin","Perfect material to","isolate something.","","","")
+            elif item["item"] ==("unprocessed","uranium"):
+                item["info"] = ("Uranium ore","Radioactive metal.","Power source for this","whole planet.","","")
+            elif item["item"] ==("ingot","iron"):
+                item["info"] = ("Iron ingot","A heavy ingot that","can be used in many","ways.","","")
+            elif item["item"] ==("ingot","copper"):
+                item["info"] = ("Copper ingot","One step from being a","copper wire or a","heat conduction pipe","","")
+            elif item["item"] ==("ingot","tungsten"):
+                item["info"] = ("Tungsten ingot","Does it have any","purpose in this form?","","","")
+            elif item["item"] ==("ingot","resin"):
+                item["info"] = ("Resin sheet","Used to make cables,","fix-tape and some other","electronics","","")
+            elif item["item"] ==("basic","plate"):
+                item["info"] = ("Iron plate","Basic sheet of metal.","Good for some basic buildings.","","","")
+            elif item["item"] ==("basic","rod"):
+                item["info"] = ("Iron rod","Supporting element in","basic buildings","","","")
+            elif item["item"] ==("basic","screws"):
+                item["info"] = ("Screws","Very useful part.","Can repair and be used","in almost everything","","")
+            elif item["item"] ==("basic","wire_copper"):
+                item["info"] = ("Copper wire","Higly electroconductive","wire. Used in basic electronics.","","","")
+            elif item["item"] ==():
+                item["info"] = ("","","","","","")
+            elif item["item"] ==():
+                item["info"] = ("","","","","","")
+            elif item["item"] ==():
+                item["info"] = ("","","","","","")
+                
+            
         temp_new_blocks = []
         if tick == 44:
             if mode == "building" and ppc_power != 0:
@@ -835,14 +945,14 @@ while 1:
                 speed = 4
             else:
                 speed = 1
-            if keys[pg.K_UP] and pos[1] != 0:
+            if keys[pg.K_UP] and pos[1] != 0 or keys[pg.K_w] and pos[1] != 0:
                 pos[1] -= speed
-            if keys[pg.K_DOWN] and pos[1] != world_len:
+            if keys[pg.K_DOWN] and pos[1] != world_len or keys[pg.K_s] and pos[1] != world_len:
                 pos[1] += speed
-            if keys[pg.K_LEFT] and pos[0] != 0:
+            if keys[pg.K_LEFT] and pos[0] != 0 or keys[pg.K_a] and pos[0] != 0:
                 pos[0] -= speed
                 facing = 0
-            if keys[pg.K_RIGHT] and pos[0] != world_len:
+            if keys[pg.K_RIGHT] and pos[0] != world_len or keys[pg.K_d] and pos[0] != world_len:
                 pos[0] += speed
                 facing = 1
         if tick % 3 == 0 and menu_tick == 0 and not(chat_open):
@@ -946,6 +1056,17 @@ while 1:
                             inventory.append({"item": ("unprocessed", "resin"), "amount": 1, "info": ("Raw resin", "Natural material.", "Good for isolatin","wires.", "")})
                             player_state_timer = 5
                             player_state = "dig_active"
+                    elif world[x + y * world_len]["tile"] == "uranium_ore":
+                        for item_id, item in enumerate(inventory):
+                            if item["item"] == ("unprocessed", "uranium") and item["amount"] < 200:
+                                inventory[item_id]["amount"] += 1
+                                added = True
+                                player_state_timer = 5
+                                player_state = "dig_active"
+                        if not(added) and len(inventory) < 30:
+                            inventory.append({"item": ("unprocessed", "uranium"), "amount": 1})
+                            player_state_timer = 5
+                            player_state = "dig_active"
                     elif world[x + y * world_len]["tile"] == "leaves":
                         for item_id, item in enumerate(inventory):
                             if item["item"] == ("bio", "leaves") and item["amount"] < 500:
@@ -954,15 +1075,13 @@ while 1:
                                 world[x + y * world_len]["tile"] = "grass"
                                 temp_new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})                                
                                 player_state_timer = 5
-                                player_state = "dig_active"
-                                print(1)
+                                player_state = "dig_active" 
                         if not(added) and len(inventory) < 30:
                             inventory.append({"item": ("bio", "leaves"), "amount": 1, "info": ("Leaves", "Natural material, but", "has a little radiation in", "it. Can be transformed", "to Biofiber")})
                             world[x + y * world_len]["tile"] = "grass"
                             temp_new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
                             player_state_timer = 5
-                            player_state = "dig_active"
-                            print(1)
+                            player_state = "dig_active" 
 
         if pos[0] >= world_len:
             pos[0] = world_len - 1

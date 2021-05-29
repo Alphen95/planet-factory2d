@@ -24,6 +24,11 @@ port = "8000"
 nick = "Player{}".format(random.randint(0,9999))
 world_applied = False
 category = 0
+chat = [{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"},{"user":"a","text":"o"}]
+recent_messages = []
+current_message = ""
+send = False
+chat_open = False
 
 ui = {
     "tooltip": pg.image.load(os.path.join("res", "ui", "tooltip_box.png")),
@@ -145,6 +150,11 @@ dosfont = pg.font.Font(os.path.join("res", "dosfont.ttf"), int(12 * screen_size[
 dosfontbig = pg.font.Font(os.path.join("res", "dosfont.ttf"), 24)
 pos = [int(world_len / 2), int(world_len / 2)]
 menubar = []
+
+sounds = {
+    "msg":pg.mixer.Sound(os.path.join("res","snd","msg.wav"))
+}
+
 
 # world define
 world = []
@@ -447,6 +457,28 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
                     winobj.blit(text_amount, (xpos + 10 * x + (cell_size * 2) * x + (cell_size * 2) - 11, ypos + 10 * y + (cell_size * 2) * y + (cell_size * 2) - 11))
                 except:
                     pass
+    if chat_open:
+        pg.draw.rect(winobj,(100,100,100),(0,0,screen_size[1],300))
+        if len(chat) <=14:
+            for message_id, message in enumerate(chat):
+                text_message= dosfontbig.render(message["user"]+" : "+message["text"], True, (0, 255, 0))
+                winobj.blit(text_message, (0,20*message_id)) 
+        elif len(chat) >14:
+            for message_id, message in enumerate(chat[-14:]):
+                text_message= dosfontbig.render(message["user"]+" : "+message["text"], True, (0, 255, 0))
+                winobj.blit(text_message, (0,20*message_id))             
+        text_message= dosfontbig.render(">"+current_message, True, (0, 255, 0))
+        winobj.blit(text_message, (0,20*14)) 
+    else:
+        if len(recent_messages) <= 14:
+            for message_id, message in enumerate(recent_messages):
+                text_message= dosfontbig.render(message["user"]+" : "+message["text"], True, (0, 255, 0))
+                winobj.blit(text_message, (0,20*message_id))    
+        elif len(recent_messages) > 14:
+            for message_id, message in enumerate(recent_messages[-14:]):
+                text_message= dosfontbig.render(message["user"]+" : "+message["text"], True, (0, 255, 0))
+                winobj.blit(text_message, (0,20*message_id))    
+
 
 
 def draw_title(winobj):
@@ -496,6 +528,12 @@ while 1:
                     power_capacity -= 25
                 if tile["tile"] == "grass" and random.randint(0, 25) == 0 and tile["building"] == None and game_mode == "singleplayer":
                     world[tile_id]["tile"] = "leaves"
+        if recent_messages != []:
+            for msg_id,msg in reversed(list(enumerate(recent_messages))):
+                if msg["timer"] <= 0:
+                    recent_messages.pop(msg_id)
+                elif msg["timer"] > 0:
+                    msg["timer"] -= 1            
         if tooltip_tick != -1:
             tooltip_tick -= 1
         if menu_tick != 0:
@@ -527,20 +565,30 @@ while 1:
                         mode = "!building"
                     elif mode == "!building":
                         mode = "building"
-                elif keys[pg.K_r]:
+                elif keys[pg.K_TAB] and menu == "hidden" and game_mode == "multiplayer":
+                    if not(chat_open): recent_messages = []
+                    chat_open = not(chat_open)
+                elif keys[pg.K_r]  and not(chat_open):
                     if current_item[1] != 270:
                         current_item[1] += 90
                     else:
                         current_item[1] = 0
-                elif keys[pg.K_5] and category != 0 or keys[pg.K_5] and current_item[0] != "":
+                elif keys[pg.K_5] and category != 0 or keys[pg.K_5] and current_item[0] != "" and not(chat_open):
                     category = 0
                     current_item = ["",0]
-                elif keys[pg.K_5] and category == 0:
+                elif keys[pg.K_5] and category == 0 and not(chat_open):
                     current_item = ["disassemble",0]                
-                elif keys[pg.K_1] and category == 0:
+                elif keys[pg.K_1] and category == 0 and not(chat_open):
                     category = 1            
-                elif keys[pg.K_1] and category == 1:
-                    current_item = ["drill",0]                           
+                elif keys[pg.K_1] and category == 1 and not(chat_open):
+                    current_item = ["drill",0]   
+                elif chat_open:
+                    if evt.key == pg.K_BACKSPACE:
+                        current_message = current_message[:-1]
+                    elif evt.key ==pg.K_RETURN:
+                        send = True
+                    else:
+                        current_message += evt.unicode
             elif evt.type == pg.MOUSEBUTTONDOWN:
                 coords = evt.pos
                 # tooltip on middle-click
@@ -577,7 +625,7 @@ while 1:
                         y -= abs(y_borders[0])
                     else:
                         y += y_borders[0]
-                    if mode == "building":
+                    if mode == "building" and not(chat_open) and menu == "hidden":
                         if current_item[0] == "drill":
                             if current_item[1] == 0:
                                 if x >= 0 and x < world_len - 1 and y >= 0 and y <= world_len - 1 and world[x + (y * world_len)]["building"] == None and world[(x + 1) + (y * world_len)]["building"] == None:
@@ -637,7 +685,6 @@ while 1:
                                     new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
                                     new_blocks.append({"id": x + ((y + 1) * world_len), "tile": world[x + ((y + 1) * world_len)]})
                         elif current_item[0] == "disassemble":
-                            print("a")
                             if world[x + (y * world_len)]["building"] == "drill" and world[(x + 1) + (y * world_len)]["building"] == "drill" and world[x + (y * world_len)]["part"] == 1 and world[(x + 1) + (y * world_len)]["part"] == 2:
                                 world[x + (y * world_len)]["building"] = None
                                 world[(x + 1) + (y * world_len)]["building"] = None
@@ -648,7 +695,6 @@ while 1:
                                 new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
                                 new_blocks.append({"id": (x + 1) + (y * world_len), "tile": world[(x + 1) + (y * world_len)]})
                             if world[x + (y * world_len)]["building"] == "drill" and world[x + ((y - 1) * world_len)]["building"] == "drill" and world[x + (y * world_len)]["part"] == 1 and world[x + ((y - 1) * world_len)]["part"] == 2:
-                                print(1)
                                 world[x + (y * world_len)]["building"] = None
                                 world[x + ((y - 1) * world_len)]["building"] = None
                                 world[x + (y * world_len)]["rotation"] = 0
@@ -667,7 +713,6 @@ while 1:
                                 new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
                                 new_blocks.append({"id": (x - 1) + (y * world_len), "tile": world[(x - 1) + (y * world_len)]})
                             if world[x + (y * world_len)]["building"] == "drill" and world[x + ((y + 1) * world_len)]["building"] == "drill" and world[x + (y * world_len)]["part"] == 1 and world[x + ((y +  1) * world_len)]["part"] == 2:
-                                print(2)
                                 world[x + (y * world_len)]["building"] = None
                                 world[x + ((y + 1) * world_len)]["building"] = None
                                 world[x + (y * world_len)]["rotation"] = 0
@@ -676,12 +721,12 @@ while 1:
                                 world[x + ((y + 1) * world_len)]["part"] = 0
                                 new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
                                 new_blocks.append({"id": x + ((y + 1) * world_len), "tile": world[x + ((y + 1) * world_len)]})
-                elif evt.button == 2:
+                elif evt.button == 2 and not(chat_open):
                     tooltip_tile = true_visible_part[x + y * 20]
                     tooltip_tick = 125
 
         keys = pg.key.get_pressed()
-        if tick % 2 == 0:
+        if tick % 2 == 0 and not(chat_open):
             keys = pg.key.get_pressed()
             if keys[pg.K_LALT]:
                 speed = 4
@@ -697,7 +742,7 @@ while 1:
             if keys[pg.K_RIGHT] and pos[0] != world_len:
                 pos[0] += speed
                 facing = 1
-        if tick % 3 == 0 and menu_tick == 0:
+        if tick % 3 == 0 and menu_tick == 0 and not(chat_open):
             if keys[pg.K_e] and menu == "hidden":
                 menu = "opening"
                 menu_tick = 10
@@ -705,7 +750,7 @@ while 1:
                 menu = "closing"
                 menu_tick = 10
 
-        if player_state_timer == 0:
+        if player_state_timer == 0 and not(chat_open):
             coords = pg.mouse.get_pos()
             # tooltip on middle-click
             # build on left-click
@@ -904,13 +949,18 @@ while 1:
                             world[new_block["id"]] = new_block["tile"]
                     except:
                         print("Failed to connect")
-
+                    chat = []
                     def socketThread():
-                        global clientSocket, running_thread, users, pos, world, new_blocks, starting_blocks, temp_new_blocks
+                        global clientSocket, running_thread, users, pos, world, new_blocks, starting_blocks, temp_new_blocks,chat, recent_messages, send, current_message
 
                         while running_thread:
                             #try:
-                            data = {"nickname": nick, "self": [pos,player_state,facing], "new_blocks": new_blocks, "temp_new_blocks":temp_new_blocks}
+                            if send:
+                                data = {"nickname": nick, "self": [pos,player_state,facing], "new_blocks": new_blocks, "temp_new_blocks":temp_new_blocks,"msg":current_message}
+                                send = False
+                                current_message = ""
+                            else:
+                                data = {"nickname": nick, "self": [pos,player_state,facing], "new_blocks": new_blocks, "temp_new_blocks":temp_new_blocks,"msg":""}
                             clientSocket.send((json.dumps(data) + "=").encode())
                             received = ""
                             while True:
@@ -924,6 +974,10 @@ while 1:
                             users = received["users"]
                             received_new_blocks = received["new_blocks"]
                             received_temp_new_blocks = received["temp_new_blocks"]
+                            if chat != received["chat"]:
+                                sounds["msg"].play()
+                                recent_messages = [{"user":x["user"],"text":x["text"],"timer":90} for x in received["chat"] if x not in chat]
+                                chat = received["chat"]
                             for block in received_new_blocks:
                                 world[block["id"]] = block["tile"]
                             for block in received_temp_new_blocks:

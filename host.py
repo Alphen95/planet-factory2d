@@ -29,6 +29,7 @@ starting_blocks = []
 world_len = 200
 tick = 0
 temp_new_blocks = []
+chat = []
 
 
 class Client:
@@ -45,7 +46,7 @@ class Client:
 
     def thread(self):
         running = True
-        global new_blocks, starting_blocks, clients, temp_new_blocks
+        global new_blocks, starting_blocks, clients, temp_new_blocks,chat
 
         while running:
             try:
@@ -64,10 +65,12 @@ class Client:
                 for temp_block in data["temp_new_blocks"]:
                     world[temp_block["id"]] = temp_block["tile"]
                     temp_new_blocks.append(temp_block)
+                if data["msg"] != "":
+                    chat.append({"user":self.nickname,"text":data["msg"]})
                 self.pos = data["self"][0]
                 self.state = data["self"][1]
                 self.rot = data["self"][2]
-                reply = {"new_blocks": new_blocks,"temp_new_blocks":temp_new_blocks}
+                reply = {"new_blocks": new_blocks,"temp_new_blocks":temp_new_blocks,"chat":chat}
                 reply["users"] = [[c.pos, c.nickname,c.state,c.rot] for c in clients if c.id != self.id]
                 self.socket.send((json.dumps(reply) + "=").encode())
             except Exception as ex:
@@ -75,6 +78,7 @@ class Client:
                 break
 
         print("[INFO] {} has disconnected".format(self.nickname))
+        chat.append({"user":"Server","text":"{} has disconnected".format(self.nickname)})
         self.socket.close()
         clients.remove(self)
 
@@ -86,6 +90,7 @@ def globalUpdateCycle():
         if tick == 44:
             temp_new_blocks = []
             print("a")
+            print(chat)
             tick = 0
             for tile_id, tile in enumerate(world):
                 if tile["tile"] == "biomass_burner":
@@ -181,5 +186,6 @@ while running:
             print("[EXCEPTION]", exc)
             continue
         print("[INFO]", "{} has connected".format(nickname))
+        chat.append({"user":"Server","text":"{} has connected".format(nickname)})
         clients.append(Client(connection, nickname, len(clients)))
 

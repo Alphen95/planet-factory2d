@@ -641,7 +641,6 @@ def draw_multiplayer(winobj, port, ip, nick):
 # main cycle
 while 1:
     if game_mode == "singleplayer" or game_mode == "multiplayer":
-        '''
         for item in inventory:
             if item["item"] ==("unprocessed","iron"):
                 item["info"] = ("Iron ore","Basic metal.","Used almost every-","where.","","")
@@ -677,7 +676,6 @@ while 1:
                 item["info"] = ("","","","","","")
             elif item["item"] ==():
                 item["info"] = ("","","","","","")
-            '''
         temp_new_blocks = []
         if tick == 44:
             if mode == "building" and ppc_power != 0:

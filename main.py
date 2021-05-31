@@ -84,8 +84,22 @@ recepies = [
         "required_text":"Copper ingot",
         "output_text":"Copper wire x5",
         "required":[[("ingot","copper"),1]],
-        "output":{"item": ("basic", "wire_copper"), "amount": 5}
+        "output":{"item": ("basic", "wire"), "amount": 5}
+    }, 
+    {
+        "name":"Cable",
+        "required_text":"Copper wire, Rubber sheet",
+        "output_text":"Copper wire x5",
+        "required":[[("basic","wire"),1],[("ingot","resin"),1]],
+        "output":{"item": ("basic", "cable"), "amount": 1}
     },     
+    {
+        "name":"Portable drill",
+        "required_text":"Iron plate x2, Iron rod x3",
+        "output_text":"Portable drill",
+        "required":[[("basic","plate"),2],[("basic","rod"),3]],
+        "output":{"item": ("basic", "drill"), "amount": 1}
+    }    
 ]
 
 ui = {
@@ -161,7 +175,9 @@ resources = {
         "plate":pg.image.load(os.path.join("res", "resources", "basic", "iron_plate.png")),
         "rod":pg.image.load(os.path.join("res", "resources", "basic", "iron_rod.png")),
         "screws":pg.image.load(os.path.join("res", "resources", "basic", "screws.png")),
-        "wire":pg.image.load(os.path.join("res", "resources", "basic", "wire_copper.png"))
+        "wire":pg.image.load(os.path.join("res", "resources", "basic", "wire_copper.png")),
+        "cable":pg.image.load(os.path.join("res", "resources", "basic", "cable.png")),
+        "drill":pg.image.load(os.path.join("res", "resources", "basic", "drill.png")),
     }
 }
 
@@ -279,13 +295,14 @@ for i in range(0, 3):
         world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "grass", "part": 0, "rotation": 0}
         if i == 1 and i1 == 1:
             world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "resin _tree", "part": 0, "rotation": 0}
-if int(world_len / 100) > 0:
-    for l in range(0, int(world_len / 100)):
-        for i in range(0, 3):
-            for i1 in range(0, 3):
-                world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "grass", "part": 0, "rotation": 0}
-                if i == 1 and i1 == 1:
-                    world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "resin_tree", "part": 0, "rotation": 0}
+for j in range(0,10):
+    x = random.randint(0, world_len - 3)
+    y = random.randint(0, world_len - 3)    
+    for i in range(0, 3):
+        for i1 in range(0, 3):
+            world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "grass", "part": 0, "rotation": 0}
+            if i == 1 and i1 == 1:
+                world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "resin_tree", "part": 0, "rotation": 0}
 
 world[0] = {"item": None, "building": "drill", "tile": "coal_ore", "part": 1, "rotation": 0}
 world[1] = {"item": None, "building": "drill", "tile": "stone", "part": 2, "rotation": 0}
@@ -446,18 +463,32 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
     if edit_mode:
         winobj.blit(pg.transform.scale(pg.transform.rotate(ui["ppc"], 0), (cell_size * 6, cell_size * 12)), (5, screen_size[1] + 10 - cell_size * 8))
         if current_item[0] != "":
-            text_tile = dosfont.render(">ROTATE: [R]", True, (0, 0, 0))
-            text_tile2 = dosfont.render(">CURRENT_ROT", True, (0, 0, 0))
-            text_rot = dosfont.render(str(current_item[1]), True, (0, 0, 0))
-            text_tile3 = dosfont.render(">CURRENT_ITM", True, (0, 0, 0))
-            text_item = dosfont.render(str(current_item[0]), True, (0, 0, 0))
-            text_cancel = dosfont.render(str("5>CANCEL"), True, (0, 0, 0))
-            winobj.blit(text_tile, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20 * 5) - cell_size * 4) * 1.25))))
-            winobj.blit(text_tile2, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20) - cell_size * 4) * 1.25))))
-            winobj.blit(text_rot, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 2) - cell_size * 4) * 1.25)))
-            winobj.blit(text_tile3, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 3) - cell_size * 4) * 1.25)))
-            winobj.blit(text_item, (int(cell_size * 1.5), (screen_size[1] + 15 + (int(((12 * screen_size[1] / (40 * 20)) * 4) - cell_size * 4) * 1.25))))
-            winobj.blit(text_cancel, (int(cell_size * 1.5), (screen_size[1] + 15 + (int(((12 * screen_size[1] / (40 * 20)) * 5) - cell_size * 4) * 1.25))))
+            if tick <= 22:
+                text_tile = dosfont.render(">ROTATE: [R]", True, (0, 0, 0))
+                text_tile2 = dosfont.render(">CURRENT_ROT", True, (0, 0, 0))
+                text_rot = dosfont.render(str(current_item[1]), True, (0, 0, 0))
+                text_tile3 = dosfont.render(">CURRENT_ITM", True, (0, 0, 0))
+                text_item = dosfont.render(str(current_item[0]), True, (0, 0, 0))
+                text_cancel = dosfont.render(str("5>CANCEL"), True, (0, 0, 0))
+                winobj.blit(text_tile, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20 * 5) - cell_size * 4) * 1.25))))
+                winobj.blit(text_tile2, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20) - cell_size * 4) * 1.25))))
+                winobj.blit(text_rot, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 2) - cell_size * 4) * 1.25)))
+                winobj.blit(text_tile3, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 3) - cell_size * 4) * 1.25)))
+                winobj.blit(text_item, (int(cell_size * 1.5), (screen_size[1] + 15 + (int(((12 * screen_size[1] / (40 * 20)) * 4) - cell_size * 4) * 1.25))))
+                winobj.blit(text_cancel, (int(cell_size * 1.5), (screen_size[1] + 15 + (int(((12 * screen_size[1] / (40 * 20)) * 5) - cell_size * 4) * 1.25))))
+            else:
+                text_tile = dosfont.render(">REQUIRED", True, (0, 0, 0))
+                text_tile2 = dosfont.render(">"+current_item[2][0], True, (0, 0, 0))
+                text_rot = dosfont.render(">"+current_item[2][1], True, (0, 0, 0))
+                text_tile3 = dosfont.render(">"+current_item[2][2], True, (0, 0, 0))
+                text_item = dosfont.render(">"+current_item[2][3], True, (0, 0, 0))
+                text_cancel = dosfont.render(str("5>CANCEL"), True, (0, 0, 0))
+                winobj.blit(text_tile, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20 * 5) - cell_size * 4) * 1.25))))
+                winobj.blit(text_tile2, (int(cell_size * 1.5), (screen_size[1] + 15 + int((12 * screen_size[1] / (40 * 20) - cell_size * 4) * 1.25))))
+                winobj.blit(text_rot, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 2) - cell_size * 4) * 1.25)))
+                winobj.blit(text_tile3, (int(cell_size * 1.5), (screen_size[1] + 15 + (int((12 * screen_size[1] / (40 * 20)) * 3) - cell_size * 4) * 1.25)))
+                winobj.blit(text_item, (int(cell_size * 1.5), (screen_size[1] + 15 + (int(((12 * screen_size[1] / (40 * 20)) * 4) - cell_size * 4) * 1.25))))
+                winobj.blit(text_cancel, (int(cell_size * 1.5), (screen_size[1] + 15 + (int(((12 * screen_size[1] / (40 * 20)) * 5) - cell_size * 4) * 1.25))))                
         else:
             if category == 0:
                 text_line1 = dosfont.render("CATEGORY: MAIN", True, (0, 0, 0))
@@ -610,6 +641,7 @@ def draw_multiplayer(winobj, port, ip, nick):
 # main cycle
 while 1:
     if game_mode == "singleplayer" or game_mode == "multiplayer":
+        '''
         for item in inventory:
             if item["item"] ==("unprocessed","iron"):
                 item["info"] = ("Iron ore","Basic metal.","Used almost every-","where.","","")
@@ -639,14 +671,13 @@ while 1:
                 item["info"] = ("Screws","Very useful part.","Can repair and be used","in almost everything","","")
             elif item["item"] ==("basic","wire_copper"):
                 item["info"] = ("Copper wire","Higly electroconductive","wire. Used in basic electronics.","","","")
+            elif item["item"] ==("basic","cable"):
+                item["info"] = ("Cable","Isoalted wire. Used to","transmit energy.","","","")
             elif item["item"] ==():
                 item["info"] = ("","","","","","")
             elif item["item"] ==():
                 item["info"] = ("","","","","","")
-            elif item["item"] ==():
-                item["info"] = ("","","","","","")
-                
-            
+            '''
         temp_new_blocks = []
         if tick == 44:
             if mode == "building" and ppc_power != 0:
@@ -715,7 +746,7 @@ while 1:
                 elif keys[pg.K_1] and category == 0 and not(chat_open):
                     category = 1            
                 elif keys[pg.K_1] and category == 1 and not(chat_open):
-                    current_item = ["drill",0]   
+                    current_item = ["drill",0,("Basic drill","Iron plate x3","Copper wire x5",""),((("basic","drill"),1),(("basic","plate"),3),(("basic","wire"),5))]   
                 elif chat_open:
                     if evt.key == pg.K_BACKSPACE:
                         current_message = current_message[:-1]
@@ -753,7 +784,7 @@ while 1:
                         x = 0
                         y = 0
                         for recepie in recepies: #(xpos+10+y*155,ypos+310+x*60,150,50)
-                            if x > 9:
+                            if x > 6:
                                 x = 0
                                 y += 1
                             can_craft = False
@@ -765,27 +796,33 @@ while 1:
                                     for inv_item_id, inv_item in enumerate(inventory):
                                         if item[0] == inv_item["item"] and item[1] <= inv_item["amount"]:
                                             can_craft = True
-                                            item_ids.append((inv_item_id,item[1]))
+                                            item_ids.append([inv_item_id,item[1]])
+                                            pprint(recepie)
                                             break
                                     if can_craft == False:  
                                         break
                                 if can_craft:
+
+                                    a = recepie["output"].copy()                                  
                                     for item_id in item_ids:
                                         item = inventory[item_id[0]]
                                         if item["amount"] > item_id[1]:
-                                            item["amount"] -= item_id[1]
+                                            inventory[item_id[0]]["amount"] -= item_id[1]
                                         else:
                                             ids_to_pop.append(item_id[0])
                                     for id_to_pop in ids_to_pop:
                                         inventory.pop(id_to_pop)
                                     for item_id, item in enumerate(inventory):
                                         if item["item"] == recepie["output"]["item"]  and item["amount"] < 200:
-                                            inventory[item_id]["amount"] += 1
+                                            for i in range(0,recepie["output"]["amount"]):
+                                                inventory[item_id]["amount"] = inventory[item_id]["amount"] + 1
                                             added = True
-                                    if not(added) and len(inventory) < 30:
-                                        inventory.append(recepie["output"])                                       
+                                    if not(added):
+                                        inventory.append(recepie["output"])
                                     
-                                    
+                                    pprint(recepie)
+                                    print("=======")
+                                    recepie["output"]   = a
                             x+=1
                     x = int(coords[0] / cell_size)
                     y = int(coords[1] / cell_size)
@@ -798,7 +835,29 @@ while 1:
                     else:
                         y += y_borders[0]
                     if mode == "building" and not(chat_open) and menu == "hidden":
-                        if current_item[0] == "drill":
+                        can_craft = False
+                        added = False
+                        item_ids = []
+                        ids_to_pop = []
+                        for item in current_item[3]:
+                            for inv_item_id, inv_item in enumerate(current_item[3]):
+                                if item[0] == inv_item["item"] and item[1] <= inv_item["amount"]:
+                                    can_craft = True
+                                    item_ids.append((inv_item_id,item[1]))
+                                    break
+                            if can_craft == False:  
+                                break
+                        if can_craft:
+                            for item_id in item_ids:
+                                item = current_item[3][item_id[0]]
+                                if item["amount"] > item_id[1]:
+                                    item["amount"] -= item_id[1]
+                                else:
+                                    ids_to_pop.append(item_id[0])
+                            for id_to_pop in ids_to_pop:
+                                current_item[3].pop(id_to_pop)
+                            added = True                         
+                        if current_item[0] == "drill" and added:
                             if current_item[1] == 0:
                                 if x >= 0 and x < world_len - 1 and y >= 0 and y <= world_len - 1 and world[x + (y * world_len)]["building"] == None and world[(x + 1) + (y * world_len)]["building"] == None:
                                     if world[x + (y * world_len)]["tile"] == "leaves":

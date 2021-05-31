@@ -167,7 +167,7 @@ for i in range(0, 3):
         if i == 1 and i1 == 1:
             world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "resin _tree", "part": 0, "rotation": 0}
             starting_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
-if int(world_len / 100) > 0:
+for j in range(0,5):
     for l in range(0, int(world_len / 100)):
         for i in range(0, 3):
             for i1 in range(0, 3):

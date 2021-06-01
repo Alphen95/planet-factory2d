@@ -43,6 +43,7 @@ class Client:
         self.pos = [0, 0]
         self.thread = threading.Thread(target=self.thread)
         self.thread.start()
+        self.player = "alphen"
 
     def thread(self):
         running = True
@@ -70,8 +71,9 @@ class Client:
                 self.pos = data["self"][0]
                 self.state = data["self"][1]
                 self.rot = data["self"][2]
+                self.player = data["self"][3]
                 reply = {"new_blocks": new_blocks,"temp_new_blocks":temp_new_blocks,"chat":chat}
-                reply["users"] = [[c.pos, c.nickname,c.state,c.rot] for c in clients if c.id != self.id]
+                reply["users"] = [[c.pos, c.nickname,c.state,c.rot,c.player] for c in clients if c.id != self.id]
                 self.socket.send((json.dumps(reply) + "=").encode())
             except Exception as ex:
                 print("[EXCEPTION]", ex)

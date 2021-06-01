@@ -348,7 +348,7 @@ for j in range(0,10):
         for i1 in range(0, 3):
             world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "grass", "part": 0, "rotation": 0}
             if i == 1 and i1 == 1:
-                world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "resin_tree", "part": 0, "rotation": 0}
+                world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "resin_ore", "part": 0, "rotation": 0}
 
 world[0] = {"item": None, "building": "drill", "tile": "coal_ore", "part": 1, "rotation": 0}
 world[1] = {"item": None, "building": "drill", "tile": "stone", "part": 2, "rotation": 0}
@@ -394,7 +394,7 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
                 winobj.blit(pg.transform.scale(resources["raw_ore"]["tungsten"], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
             elif block == "uranium_ore":
                 winobj.blit(pg.transform.scale(resources["raw_ore"]["uranium"], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))            
-            elif block == "resin_tree":
+            elif block == "resin_ore":
                 winobj.blit(pg.transform.scale(ground_tiles[2], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
                 winobj.blit(pg.transform.scale(resources["raw_ore"]["resin"], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
             elif block == "water":
@@ -483,7 +483,7 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
             winobj.blit(pg.transform.scale(resources["raw_ore"]["tungsten"], (cell_size, cell_size)), (xpos + 20, ypos + 10))
         elif block == "uranium_ore":
             winobj.blit(pg.transform.scale(resources["raw_ore"]["uranium"], (cell_size, cell_size)), (xpos + 20, ypos + 10))        
-        elif block == "resin_tree":
+        elif block == "resin_ore":
             winobj.blit(pg.transform.scale(ground_tiles[2], (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
             winobj.blit(pg.transform.scale(resources["raw_ore"]["resin"], (cell_size, cell_size)), (xpos + 20, ypos + 10))
         elif block == "water":
@@ -775,9 +775,9 @@ while 1:
                 elif tile["tile"] == "coal_plant" and tile["part"] == 1:
                     #power_capacity += 250
                     pass
-                elif tile["tile"] == "drill" and tile["part"] == 1:
+                elif tile["building"] == "drill" and tile["part"] == 1:
                     #power_capacity -= 25
-                    if "inventory" in tile and tile["inventory"] < 100: tile["inventory"]["amount"] += 1
+                    if "inventory" in tile and tile["inventory"]["amount"] < 200: tile["inventory"]["amount"] += 1
                     else:tile["inventory"] = {"amount":1,"item":("unprocessed",tile["tile"][:-4])}
                 if tile["tile"] == "grass" and random.randint(0, 25) == 0 and tile["building"] == None and game_mode == "singleplayer":
                     world[tile_id]["tile"] = "leaves"
@@ -942,7 +942,7 @@ while 1:
                             for id_to_pop in reversed(sorted(ids_to_pop)):
                                 inventory.pop(id_to_pop)
                             added = True                         
-                        if current_item[0] == "drill" and added:
+                        if current_item[0] == "drill" and added and "ore" in world[x + (y * world_len)]["tile"]:
                             if current_item[1] == 0:
                                 if x >= 0 and x < world_len - 1 and y >= 0 and y <= world_len - 1 and world[x + (y * world_len)]["building"] == None and world[(x + 1) + (y * world_len)]["building"] == None:
                                     if world[x + (y * world_len)]["tile"] == "leaves":
@@ -1283,9 +1283,12 @@ while 1:
                                 inventory_tile =x + (y * world_len)
                             else:
                                 inventory_tile =x + ((y + 1) * world_len)   
-                        menu = "opening"
-                        menu_tick = 10
-
+                        for item_id, item in enumerate(inventory):
+                            if item["item"] == world[inventory_tile]["inventory"]["item"] and item["amount"] < 200:
+                                inventory[item_id]["amount"] += world[inventory_tile]["inventory"]["amount"]
+                                added = True
+                        if not(added) and len(inventory) < 30: #and inventory[item_id]["amount"] != 0:
+                            inventory.append(inventory[item_id])
         if pos[0] >= world_len:
             pos[0] = world_len - 1
         elif pos[0] < 0:

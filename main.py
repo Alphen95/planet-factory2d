@@ -248,7 +248,7 @@ tooltip_tick = -1
 tooltip_tile = {}
 menu = "hidden"
 menu_tick = 0
-inventory = [{"item":("basic","drill"),"amount":1},{"item":("basic","plate"),"amount":3},{"item":("basic","wire"),"amount":5},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]
+inventory = [{"item":("basic","drill"),"amount":2},{"item":("basic","plate"),"amount":6},{"item":("basic","wire"),"amount":10},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]
 current_item = ["", 0]
 mode = "!building"
 power_capacity = 0
@@ -412,8 +412,8 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
                     winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["conveyor"][2], block_rotation), (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
                 elif tick <= 44:
                     winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["conveyor"][3], block_rotation), (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
-            elif block_building == "electricity_point":
-                winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["electricity_point"][0], block_rotation), (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
+            elif block_building == "biomass_burner":
+                winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["biomass_burner"][0], block_rotation), (cell_size, cell_size)), (x1 * cell_size, y1 * cell_size))
         x += 1
     x1 = pos[0]
     y1 = pos[1]
@@ -501,6 +501,9 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
                 winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["conveyor"][2], block_rotation), (cell_size, cell_size)), (xpos + 20, ypos + 10))
             elif tick <= 44:
                 winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["conveyor"][3], block_rotation), (cell_size, cell_size)), (xpos + 20, ypos + 10))
+        elif block_building == "biomass_burner":
+            winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["biomass_burner"][0], block_rotation), (cell_size, cell_size)), (xpos + 20, ypos + 10))
+            
 
     if edit_mode:
         winobj.blit(pg.transform.scale(pg.transform.rotate(ui["ppc"], 0), (cell_size * 6, cell_size * 12)), (5, screen_size[1] + 10 - cell_size * 8))
@@ -684,14 +687,27 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
                     winobj.blit(text_amount, (xpos + 10 * x + (cell_size * 2) * x + (cell_size * 2) - 11, ypos + 10 * y + (cell_size * 2) * y + (cell_size * 2) - 11))
                 except:
                     pass
-        x = 5
-        y = 4
-        winobj.blit(pg.transform.scale(ui["inv_cell"], (cell_size * 2, cell_size * 2)), (xpos + 5 + 10 * x + (cell_size * 2) * x, ypos + 5 + 10 * y + (cell_size * 2) * y))
-        item = world[inventory_tile]["inventory"]["item"]
-        item_amount = world[inventory_tile]["inventory"]["amount"]
-        winobj.blit(pg.transform.scale(resources[item[0]][item[1]], (cell_size * 2, cell_size * 2)), (xpos + 10 * x + (cell_size * 2) * x, ypos + 10 * y + (cell_size * 2) * y))
-        text_amount = dosfont.render(str(item_amount), True, (255, 255, 255))
-        winobj.blit(text_amount, (xpos + 10 * x + (cell_size * 2) * x + (cell_size * 2) - 11, ypos + 10 * y + (cell_size * 2) * y + (cell_size * 2) - 11))
+        if world[inventory_tile]["inventory"] != list:
+            x = 5
+            y = 4
+            try:
+                winobj.blit(pg.transform.scale(ui["inv_cell"], (cell_size * 2, cell_size * 2)), (xpos + 5 + 10 * x + (cell_size * 2) * x, ypos + 5 + 10 * y + (cell_size * 2) * y))
+                item = world[inventory_tile]["inventory"]["item"]
+                item_amount = world[inventory_tile]["inventory"]["amount"]
+                winobj.blit(pg.transform.scale(resources[item[0]][item[1]], (cell_size * 2, cell_size * 2)), (xpos + 10 * x + (cell_size * 2) * x, ypos + 10 * y + (cell_size * 2) * y))
+                text_amount = dosfont.render(str(item_amount), True, (255, 255, 255))
+                winobj.blit(text_amount, (xpos + 10 * x + (cell_size * 2) * x + (cell_size * 2) - 11, ypos + 10 * y + (cell_size * 2) * y + (cell_size * 2) - 11))
+            except:pass
+        else:
+            for x in range(len(world[inventory_tile]["inventory"])):
+                try:
+                    winobj.blit(pg.transform.scale(ui["inv_cell"], (cell_size * 2, cell_size * 2)), (xpos + 5 + 10 * x + (cell_size * 2) * x, ypos + 5 + 10 * y + (cell_size * 2) * y))
+                    item = world[inventory_tile]["inventory"][x]["item"]
+                    item_amount = world[inventory_tile]["inventory"][x]["amount"]
+                    winobj.blit(pg.transform.scale(resources[item[0]][item[1]], (cell_size * 2, cell_size * 2)), (xpos + 10 * x + (cell_size * 2) * x, ypos + 10 * y + (cell_size * 2) * y))
+                    text_amount = dosfont.render(str(item_amount), True, (255, 255, 255))
+                    winobj.blit(text_amount, (xpos + 10 * x + (cell_size * 2) * x + (cell_size * 2) - 11, ypos + 10 * y + (cell_size * 2) * y + (cell_size * 2) - 11))    
+                except:pass
     if chat_open:
         pg.draw.rect(winobj,(100,100,100),(0,0,screen_size[1],300))
         if len(chat) <=14:
@@ -870,15 +886,19 @@ while 1:
                         current_item[1] += 90
                     else:
                         current_item[1] = 0
-                elif keys[pg.K_5] and category != 0 or keys[pg.K_5] and current_item[0] != "" and not(chat_open):
+                elif keys[pg.K_5] and category != 0 and mode == "building" or keys[pg.K_5] and current_item[0] != "" and not(chat_open) and mode == "building":
                     category = 0
                     current_item = ["",0,("","","","")]
-                elif keys[pg.K_5] and category == 0 and not(chat_open):
+                elif keys[pg.K_5] and category == 0 and not(chat_open) and mode == "building":
                     current_item = ["disassemble",0,("","","",""),()]                
-                elif keys[pg.K_1] and category == 0 and not(chat_open):
-                    category = 1            
-                elif keys[pg.K_1] and category == 1 and not(chat_open):
-                    current_item = ["drill",0,("Basic drill","Iron plate x3","Copper wire x5",""),((("basic","drill"),1),(("basic","plate"),3),(("basic","wire"),5))]   
+                elif keys[pg.K_1] and category == 0 and not(chat_open) and mode == "building":
+                    category = 1 
+                elif keys[pg.K_2] and category == 0 and not(chat_open) and mode == "building":
+                    category = 2                
+                elif keys[pg.K_1] and category == 1 and not(chat_open) and mode == "building":
+                    current_item = ["drill",0,("Basic drill","Iron plate x3","Copper wire x5",""),((("basic","drill"),1),(("basic","plate"),3),(("basic","wire"),5))] 
+                elif keys[pg.K_1] and category == 2 and not(chat_open) and mode == "building":
+                    current_item = ["biomass_burner",0,("Copper wire x10","Iron plate x5","",""),((("basic","plate"),5),(("basic","wire"),10))]                 
                 elif chat_open:
                     if evt.key == pg.K_BACKSPACE:
                         current_message = current_message[:-1]
@@ -936,13 +956,30 @@ while 1:
                         for y in range(0,3):
                             for x in range(0,9):
                                 if 5 + 10 * x+ (cell_size * 2) * x <= coords[0] and 5 + 10 * x + (cell_size * 2) * x+ (cell_size * 2) >= coords[0] and 5 + 10 * y+ (cell_size * 2) * y <= coords[1] and 5 + 10 * y + (cell_size * 2) * y+ (cell_size * 2)>= coords[1]:
+                                    print(cursor_tile_id)
                                     if cursor_tile_id == -2 and inventory[x+y*9] == {}:
                                         temp_var = world[inventory_tile]["inventory"].copy()
-                                        world[inventory_tile]["inventory"]["amount"] = 0
+                                        if world[inventory_tile]["building"] == "drill":
+                                            world[inventory_tile]["inventory"]["amount"] = 0
+                                        else:
+                                            world[inventory_tile]["inventory"] = {}
                                         inventory[x+y*9] = temp_var
                                         cursor_tile_id = -1            
                                     elif cursor_tile_id == -2 and inventory[x+y*9]["item"] == world[inventory_tile]["inventory"]["item"] and world[inventory_tile]["inventory"]["amount"] != 0:
                                         temp_var = world[inventory_tile]["inventory"]["amount"]
+                                        if world[inventory_tile]["building"] == "drill":
+                                            world[inventory_tile]["inventory"]["amount"] = 0
+                                        else:
+                                            world[inventory_tile]["inventory"] = {}                                        
+                                        inventory[x+y*9]["amount"] += temp_var
+                                        cursor_tile_id = -1
+                                    elif cursor_tile_id <= -2 and inventory[x+y*9] == {}:
+                                        temp_var = world[inventory_tile]["inventory"][abs(cursor_tile_id)-2].copy()
+                                        world[inventory_tile]["inventory"]["amount"] = 0
+                                        inventory[x+y*9] = temp_var
+                                        cursor_tile_id = -1            
+                                    elif cursor_tile_id <= -2 and inventory[x+y*9]["item"] == world[inventory_tile]["inventory"]["item"] and world[inventory_tile]["inventory"]["amount"] != 0:
+                                        temp_var = world[inventory_tile]["inventory"][abs(cursor_tile_id)-2]["amount"]
                                         world[inventory_tile]["inventory"]["amount"] = 0
                                         inventory[x+y*9]["amount"] += temp_var
                                         cursor_tile_id = -1
@@ -958,13 +995,47 @@ while 1:
                                         cursor_tile_id = -1                                            
                                     else:
                                         cursor_tile_id = x+y*9
+                        if type(world[inventory_tile]["inventory"]) != list:
                             x = 5
                             y = 4
                             if 5 + 10 * x+ (cell_size * 2) * x <= coords[0] and 5 + 10 * x + (cell_size * 2) * x+ (cell_size * 2) >= coords[0] and 5 + 10 * y+ (cell_size * 2) * y <= coords[1] and 5 + 10 * y + (cell_size * 2) * y+ (cell_size * 2)>= coords[1]:
-                                if cursor_tile_id != -1:
-                                    pass
+                                if cursor_tile_id > -1:
+                                    if world[inventory_tile]["building"] != "drill":
+                                        print(1)
+                                        print(cursor_tile_id != -1 and world[inventory_tile]["inventory"] == {},cursor_tile_id != -1 , world[inventory_tile]["inventory"] == {},world[inventory_tile]["inventory"])
+                                        if cursor_tile_id != -1 and world[inventory_tile]["inventory"] == {}:
+                                            print("a")
+                                            temp_var = inventory[cursor_tile_id].copy()
+                                            inventory[cursor_tile_id] = {}
+                                            world[inventory_tile]["inventory"] = temp_var
+                                            cursor_tile_id = -1            
+                                        elif cursor_tile_id >= 0 and world[inventory_tile]["inventory"]["item"] == inventory[cursor_tile_id]["item"] and world[inventory_tile]["inventory"]["amount"] != 0:
+                                            print("a")
+                                            temp_var = inventory[cursor_tile_id]["amount"]
+                                            inventory[cursor_tile_id] = {}
+                                            world[inventory_tile]["inventory"][abs(cursor_tile_id)-2] += temp_var
+                                            cursor_tile_id = -1                                        
                                 else:
-                                    cursor_tile_id = -2  
+                                    if world[inventory_tile]["inventory"] != {}:
+                                        cursor_tile_id = -2  
+                        else:
+                            for x in range(len(world[inventory_tile]["inventory"])):
+                                y = 4
+                                if 5 + 10 * x+ (cell_size * 2) * x <= coords[0] and 5 + 10 * x + (cell_size * 2) * x+ (cell_size * 2) >= coords[0] and 5 + 10 * y+ (cell_size * 2) * y <= coords[1] and 5 + 10 * y + (cell_size * 2) * y+ (cell_size * 2)>= coords[1]:
+                                    if cursor_tile_id != -1:
+                                        if world[inventory_tile]["building"] != "drill":
+                                            if cursor_tile_id >= 0 and world[inventory_tile]["inventory"] == {}:
+                                                temp_var = world[inventory_tile]["inventory"].copy()
+                                                inventory[cursor_tile_id] = {}
+                                                world[inventory_tile]["inventory"][abs(cursor_tile_id)-2] = temp_var
+                                                cursor_tile_id = -1            
+                                            elif cursor_tile_id >= 0 and world[inventory_tile]["inventory"]["item"] == world[inventory_tile]["inventory"]["item"] and world[inventory_tile]["inventory"]["amount"] != 0:
+                                                temp_var = inventory[cursor_tile_id]["amount"]
+                                                inventory[cursor_tile_id] = {}
+                                                world[inventory_tile]["inventory"][abs(cursor_tile_id)-2] += temp_var
+                                                cursor_tile_id = -1                                          
+                                    else:
+                                        cursor_tile_id = -1*(x+2)  
                         for recepie in recepies: #(xpos+10+y*155,ypos+310+x*60,150,50)
                             if x > 6:
                                 x = 0
@@ -1025,14 +1096,13 @@ while 1:
                         ids_to_pop = []
                         for item in current_item[3]:
                             for inv_item_id, inv_item in enumerate(inventory):
-                                if item[0] == inv_item["item"] and item[1] <= inv_item["amount"]:
+                                if inv_item != {} and item[0] == inv_item["item"] and item[1] <= inv_item["amount"]:
                                     can_craft = True
                                     item_ids.append((inv_item_id,item[1]))
                                     break
                             if can_craft == False:  
                                 break                         
                         if current_item[0] == "drill" and can_craft and "ore" in world[x + (y * world_len)]["tile"]:
-                            print(world[x + (y * world_len)]["tile"])
                             if current_item[1] == 0:
                                 if x >= 0 and x < world_len - 1 and y >= 0 and y <= world_len - 1 and world[x + (y * world_len)]["building"] == None and world[(x + 1) + (y * world_len)]["building"] == None:
                                     if world[x + (y * world_len)]["tile"] == "leaves":
@@ -1098,6 +1168,17 @@ while 1:
                                     new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
                                     new_blocks.append({"id": x + ((y + 1) * world_len), "tile": world[x + ((y + 1) * world_len)]})
                                     built = True
+                        elif current_item[0] == "biomass_burner":
+                            if world[x + (y * world_len)]["building"] == None:
+                                if world[x + (y * world_len)]["tile"] == "leaves":
+                                    world[x + (y * world_len)]["tile"] = "grass"
+                                world[x + y * world_len]["inventory"] = {}
+                                world[x + (y * world_len)]["building"] = "biomass_burner"
+                                world[x + (y * world_len)]["inventory"] = {}
+                                world[x + (y * world_len)]["rotation"] = current_item[1]
+                                world[x + (y * world_len)]["part"] = 1
+                                new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                built = True
                         elif current_item[0] == "disassemble":
                             if world[x + (y * world_len)]["building"] == "drill":
                                 if world[x + (y * world_len)]["rotation"] == 0:
@@ -1213,6 +1294,29 @@ while 1:
                                         for item_id, item in inventory:
                                             if item == {}:
                                                 inventory[item_id] = {"item":("basic","plate"),"amount":3}   
+                            elif world[x + (y * world_len)]["building"] == "biomass_burner":
+                                world[x + (y * world_len)]["building"] = None
+                                world[x + (y * world_len)]["rotation"] = 0
+                                world[x + (y * world_len)]["part"] = 0
+                                new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
+                                for item_id, item in enumerate(inventory):
+                                    added = True
+                                    if "item" in item and item["item"] ==  ("basic","wire") and item["amount"] < 200:
+                                        inventory[item_id]["amount"] = inventory[item_id]["amount"] + 5
+                                        added = True
+                                if not(added):
+                                    for item_id, item in inventory:
+                                        if item == {}:
+                                            inventory[item_id] = {"item":("basic","wire"),"amount":10}
+                                added = False
+                                for item_id, item in enumerate(inventory):
+                                    if "item" in item and item["item"] ==  ("basic","plate") and item["amount"] < 200:
+                                        inventory[item_id]["amount"] = inventory[item_id]["amount"] + 3
+                                        added = True
+                                if not(added):
+                                    for item_id, item in inventory:
+                                        if item == {}:
+                                            inventory[item_id] = {"item":("basic","plate"),"amount":3}                                   
                         if built:
                             can_craft = False
                             added = False
@@ -1227,10 +1331,10 @@ while 1:
                                 if can_craft == False:  
                                     break
                             if can_craft:
-                                for item_id in item_ids:
-                                    item = current_item[3][item_id[0]]
-                                    if item[1] > item_id[1]:
-                                        item[1] -= item_id[1]
+                                for i, item_id in enumerate(item_ids):
+                                    item = current_item[3][i]
+                                    if item[1] < inventory[item_id[0]]["amount"]:
+                                        inventory[item_id[0]]["amount"] -= item[1]
                                     else:
                                         ids_to_pop.append(item_id[0])
                                 for id_to_pop in reversed(sorted(ids_to_pop)):
@@ -1310,7 +1414,34 @@ while 1:
                     y += y_borders[0]
                 if mode == "!building":
                     added = False
-                    if world[x + y * world_len]["tile"] == "iron_ore":
+                    if world[x + y * world_len]["building"] == "drill":                 
+                        if world[x + (y * world_len)]["rotation"] == 0:
+                            if world[x + (y * world_len)]["part"] == 1:
+                                inventory_tile = x + (y * world_len)
+                            else:
+                                inventory_tile =(x - 1) + (y * world_len)
+                        if world[x + (y * world_len)]["rotation"] == 90:
+                            if world[x + (y * world_len)]["part"] == 1:
+                                inventory_tile =x + (y * world_len) 
+                            else:
+                                inventory_tile =x + ((y + 1) * world_len)
+                        if world[x + (y * world_len)]["rotation"] == 180:
+                            if world[x + (y * world_len)]["part"] == 2:
+                                inventory_tile =x + (y * world_len)
+                            else:
+                                inventory_tile =(x - 1) + (y * world_len)
+                        if world[x + (y * world_len)]["rotation"] == 270:
+                            if world[x + (y * world_len)]["part"] == 2:
+                                inventory_tile =x + (y * world_len)
+                            else:
+                                inventory_tile =x + ((y + 1) * world_len) 
+                        menu = "opening"
+                        menu_tick = 10 
+                    elif world[x + y * world_len]["building"] == "biomass_burner":
+                        inventory_tile =x + (y * world_len)
+                        menu = "opening"
+                        menu_tick = 10                         
+                    elif world[x + y * world_len]["tile"] == "iron_ore":
                         for item_id, item in enumerate(inventory):
                             if "item" in item and item["item"] == ("unprocessed", "iron") and item["amount"] < 200:
                                 inventory[item_id]["amount"] += 1
@@ -1420,32 +1551,7 @@ while 1:
                             temp_new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
                             player_state_timer = 5
                             player_state = "dig_active"
-                    if world[x + y * world_len]["building"] == "drill":
-                        print("a")
-                        print(world[x + (y * world_len)]["rotation"])
-                        print(world[x + (y * world_len)]["part"])                        
-                        if world[x + (y * world_len)]["rotation"] == 0:
-                            if world[x + (y * world_len)]["part"] == 1:
-                                inventory_tile = x + (y * world_len)
-                            else:
-                                inventory_tile =(x - 1) + (y * world_len)
-                        if world[x + (y * world_len)]["rotation"] == 90:
-                            if world[x + (y * world_len)]["part"] == 1:
-                                inventory_tile =x + (y * world_len) 
-                            else:
-                                inventory_tile =x + ((y + 1) * world_len)
-                        if world[x + (y * world_len)]["rotation"] == 180:
-                            if world[x + (y * world_len)]["part"] == 2:
-                                inventory_tile =x + (y * world_len)
-                            else:
-                                inventory_tile =(x - 1) + (y * world_len)
-                        if world[x + (y * world_len)]["rotation"] == 270:
-                            if world[x + (y * world_len)]["part"] == 2:
-                                inventory_tile =x + (y * world_len)
-                            else:
-                                inventory_tile =x + ((y + 1) * world_len) 
-                        menu = "opening"
-                        menu_tick = 10
+                    
         if pos[0] >= world_len:
             pos[0] = world_len - 1
         elif pos[0] < 0:

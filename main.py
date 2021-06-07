@@ -35,6 +35,11 @@ player_type = "alphen"
 inventory_tile = ""
 cursor_tile_id = -1
 dialogue = [[],0]
+power_capacity = 0
+power_capacity_current = 0
+power_max = 0
+power_usage = 0
+power_down = False
 """
 ("",""):0, 
     ("",""):0, 
@@ -133,11 +138,11 @@ recepies = [
         "output":{"item": ("bio", "fiber"), "amount": 1}
     }, 
     {
-        "name":"BioUranium fuel rod x3",
+        "name":"BioUranium fuel rod x6",
         "required_text":("Biofiber x3","Iron plate x5"),
         "output_text":"",
         "required":[[("bio","fiber"),3],[("basic","plate"),5]],
-        "output":{"item": ("uranium", "bio"), "amount": 3}
+        "output":{"item": ("uranium", "bio"), "amount": 6}
     },     
 ]
 
@@ -154,7 +159,9 @@ ui = {
     "inv_cell": pg.image.load(os.path.join("res", "ui", "inv_cell.png")),
     "cursor": pg.image.load(os.path.join("res", "ui", "cursor.png")),
     "title": pg.image.load(os.path.join("res", "ui", "title.png")),
-    "titlename": pg.image.load(os.path.join("res", "ui", "titlename.png"))
+    "titlename": pg.image.load(os.path.join("res", "ui", "titlename.png")),
+    "fuse_normal":pg.image.load(os.path.join("res", "ui", "fuse_normal.png")),
+    "fuse_broken":pg.image.load(os.path.join("res", "ui", "fuse_broken.png")),
 }
 
 player = {
@@ -309,7 +316,7 @@ tooltip_tick = -1
 tooltip_tile = {}
 menu = "hidden"
 menu_tick = 0
-inventory = [{"item":("basic","drill"),"amount":2},{"item":("basic","plate"),"amount":6},{"item":("basic","wire"),"amount":10},{"item":("uranium","bio"),"amount":10000},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]
+inventory = [{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]
 current_item = ["", 0]
 mode = "!building"
 power_capacity = 0
@@ -405,11 +412,7 @@ for j in range(0,10):
             world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "grass", "part": 0, "rotation": 0}
             if i == 1 and i1 == 1:
                 world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "resin_ore", "part": 0, "rotation": 0}
-
-world[0] = {"item": None, "building": "drill", "tile": "coal_ore", "part": 1, "rotation": 0,"inventory":{"item":("unprocessed","coal"),"amount":1}}
-world[1] = {"item": None, "building": "drill", "tile": "stone", "part": 2, "rotation": 0}
-world[2] = {"item": None, "building": "conveyor_belt", "tile": "stone", "part": 0, "rotation": 0}
-
+                
 def create_deal():
     possible_items = list(item_costs.items())  
     deal = random.choice(possible_items)
@@ -806,6 +809,19 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
                     winobj.blit(text_amount, (xpos + 10 * x + (cell_size * 2) * x + (cell_size * 2) - 11, ypos + 10 * y + (cell_size * 2) * y + (cell_size * 2) - 11))
                 except:
                     pass
+        if world[inventory_tile]["building"] == "biomass_burner":
+            text_line1 = dosfontbig.render("Max power production:{}".format(power_max), True, (0, 0, 0))
+            text_line2 = dosfontbig.render("Power production:{}".format(power_capacity_current), True, (0, 0, 0))
+            text_line3 = dosfontbig.render("Power consumption:{}".format(power_usage), True, (0, 0, 0))
+            text_line4 = dosfontbig.render("Power left:{}".format(power_capacity), True, (0, 0, 0))
+            winobj.blit(text_line1, (cell_size*1,cell_size*7))
+            winobj.blit(text_line2, (cell_size*1,cell_size*7.5))
+            winobj.blit(text_line3, (cell_size*1,cell_size*8))
+            winobj.blit(text_line4, (cell_size*1,cell_size*8.5))  
+            if power_down:
+                winobj.blit(pg.transform.scale(ui["fuse_broken"], (cell_size * 2, cell_size*4)), (cell_size*1,cell_size*9))
+            else:
+                winobj.blit(pg.transform.scale(ui["fuse_normal"], (cell_size * 2, cell_size*4)), (cell_size*1,cell_size*9))
         if world[inventory_tile]["inventory"] != list:
             x = 5
             y = 4
@@ -987,23 +1003,33 @@ while 1:
                     item["info"] = ("","","","","","")
         temp_new_blocks = []
         if tick == 44:
-            if mode == "building" and ppc_power != 0:
-                ppc_power -= 1
             tick = 0
             power_capacity = 0
+            power_capacity_current = 0
+            power_max = 0
+            power_usage = 0
             for tile_id, tile in enumerate(world):
-                if tile["tile"] == "biomass_burner":
-                    if tile["timer"] == 0:
-                        pass
-                    else:
+                if tile["building"] == "biomass_burner":
+                    power_max += 100       
+                    if tile["timer"] == 0 and not power_down:
+                        if tile["inventory"] != {} and tile["inventory"]["amount"] > 1:
+                            tile["timer"] = 30
+                            tile["inventory"]["amount"] -= 1
+                            power_capacity += 100  
+                            power_capacity_current +=100
+                    elif not power_down:
                         tile["timer"] -= 1
                         power_capacity += 100                        
                 elif tile["tile"] == "coal_plant" and tile["part"] == 1:
                     #power_capacity += 250
-                    pass
-                elif tile["building"] == "drill" and tile["part"] == 1:
-                    #power_capacity -= 25
+                    pass                
+            for tile_id, tile in enumerate(world):
+                if tile["building"] == "drill" and tile["part"] == 1 and power_capacity >= 25 and not power_down:
+                    power_capacity -= 25
+                    power_usage += 25
                     tile["inventory"]["amount"] += 1
+                elif tile["building"] == "drill" and tile["part"] == 1 and power_capacity < 25:
+                    power_down = True
                 if tile["tile"] == "grass" and random.randint(0, 25) == 0 and tile["building"] == None and game_mode == "singleplayer":
                     world[tile_id]["tile"] = "leaves"
         if recent_messages != []:
@@ -1287,7 +1313,9 @@ while 1:
                                         inventory[x+y*9]["amount"] += temp_var
                                         cursor_tile_id = -1                                            
                                     else:
-                                        cursor_tile_id = x+y*9                                        
+                                        cursor_tile_id = x+y*9 
+                        if power_down and coords[0] >= cell_size and coords[0] <= cell_size*3 and coords[1] <= cell_size*13 and coords[1] >= cell_size*9: # 
+                            power_down = False
                         if type(world[inventory_tile]["inventory"]) != list:
                             x = 5
                             y = 4

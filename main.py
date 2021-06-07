@@ -954,11 +954,9 @@ while 1:
                 menu_tick = 0
                 action = "sell" 
             elif dialogue_strip["text"] == "exit":
-                print("a")
                 menu = "hidden"
                 menu_tick = 0
                 action = "" 
-                print(action)
                 if dialogue[1]+1 != len(dialogue[0]):dialogue[1] += 1
                 else:dialogue = [[],0]
     else:
@@ -1234,7 +1232,6 @@ while 1:
                                     if can_craft == False:  
                                         break
                                 if can_craft:
-                                    print("a")
                                     a = recepie["output"].copy()   
                                     for item_id in item_ids:
                                         item = inventory[item_id[0]]
@@ -1323,7 +1320,6 @@ while 1:
                                 if cursor_tile_id > -1:
                                     if world[inventory_tile]["building"] != "drill":
                                         if cursor_tile_id != -1 and world[inventory_tile]["inventory"] == {}:
-                                            print("a")
                                             if world[inventory_tile]["building"] != "biomass_burner":
                                                 temp_var = inventory[cursor_tile_id].copy()
                                                 inventory[cursor_tile_id] = {}
@@ -1350,7 +1346,6 @@ while 1:
                                                     
                                 else:
                                     if world[inventory_tile]["inventory"] != {}:
-                                        print("a")
                                         cursor_tile_id = -2  
                         else:
                             for x in range(len(world[inventory_tile]["inventory"])):
@@ -1429,7 +1424,6 @@ while 1:
                                     new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
                                     new_blocks.append({"id": x + ((y - 1) * world_len), "tile": world[x + ((y - 1) * world_len)]})
                                     built = True
-                                    print("a", new_blocks)
                             elif current_item[1] == 180:
                                 if x > 0 and x <= world_len - 1 and y >= 0 and y <= world_len - 1 and world[x + (y * world_len)]["building"] == None and world[(x - 1) + (y * world_len)]["building"] == None:
                                     if world[x + (y * world_len)]["tile"] == "leaves":
@@ -1603,7 +1597,6 @@ while 1:
                                     for item_id, item in enumerate(inventory):
                                         if item == {}:
                                             inventory[item_id] = {"item":("basic","wire"),"amount":10}
-                                            print("a")
                                             break
                                 added = False
                                 for item_id, item in enumerate(inventory):
@@ -2039,10 +2032,8 @@ while 1:
                 sys.exit()                 
             elif evt.type == pg.KEYDOWN:
                 if evt.key == pg.K_RETURN:
-                    print("a")
                     if player_type.lower() != "alphen" and player_type.lower() != "fury" and player_type.lower() != "a" and player_type.lower() != "f":
                         player_type = random.choice(["alphen","fury"])
-                        print("a")
                     else:
                         if player_type.lower() == "a":
                             player_type = "alphen"

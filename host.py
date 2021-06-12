@@ -19,6 +19,26 @@ except Exception as exc:
     input()
     exit()
 
+processing_recepies = {
+    "smelter":[
+        {
+            "name":"Iron ingot",
+            "required_text":"Iron ore",
+            "output_text":"Iron ingot",
+            "required":[[("unprocessed","iron"),1]],
+            "output":{"item": ("ingot", "iron"), "amount": 1},
+            "time":2
+        },
+        {
+            "name":"Copper ingot",
+            "required_text":"Copper ore",
+            "output_text":"Copper ingot",
+            "required":[[("unprocessed","copper"),1]],
+            "output":{"item": ("ingot", "copper"), "amount": 1},
+            "time":2
+        }, 
+    ]
+}
 clients = []
 dirname = os.path.dirname(__file__)
 serverSocket.listen(1)
@@ -30,6 +50,12 @@ world_len = 200
 tick = 0
 temp_new_blocks = []
 chat = []
+
+power_capacity = 0
+power_capacity_current = 0
+power_max = 0
+power_usage = 0
+power_down = False
 
 
 class Client:
@@ -47,10 +73,11 @@ class Client:
 
     def thread(self):
         running = True
-        global new_blocks, starting_blocks, clients, temp_new_blocks,chat
+        global new_blocks, starting_blocks, clients, temp_new_blocks,chat,world
 
         while running:
             try:
+                block_updated = False
                 received = ""
                 while True:
                     received += self.socket.recv(8192).decode("utf-8")
@@ -60,19 +87,22 @@ class Client:
                         received = received[:-1]
                         break
                 data = json.loads(received)
-                for block in data["new_blocks"]:
-                    world[block["id"]] = block["tile"]
+                received_new_blocks = data["new_blocks"]
+                for block in received_new_blocks:
                     new_blocks.append(block)
+                    world[block["id"]] = block["tile"]  
                 for temp_block in data["temp_new_blocks"]:
                     world[temp_block["id"]] = temp_block["tile"]
                     temp_new_blocks.append(temp_block)
                 if data["msg"] != "":
                     chat.append({"user":self.nickname,"text":data["msg"]})
+                power_down = data["power_down"]
                 self.pos = data["self"][0]
                 self.state = data["self"][1]
                 self.rot = data["self"][2]
                 self.player = data["self"][3]
-                reply = {"new_blocks": new_blocks,"temp_new_blocks":temp_new_blocks,"chat":chat}
+                reply = {"new_blocks": [], "temp_new_blocks":temp_new_blocks,"chat":chat,"power":[power_down,power_capacity,power_capacity_current,power_max,power_usage]}
+                if not block_updated: reply["new_blocks"]= new_blocks
                 reply["users"] = [[c.pos, c.nickname,c.state,c.rot,c.player] for c in clients if c.id != self.id]
                 self.socket.send((json.dumps(reply) + "=").encode())
             except Exception as ex:
@@ -86,26 +116,75 @@ class Client:
 
 
 def globalUpdateCycle():
-    global clients, running, tick, world, temp_new_blocks
+    global clients, running, tick, world, temp_new_blocks,new_blocks,power_capacity,power_capacity_current,power_down,power_max,power_usage
     while running:
+        for tile_id,tile in enumerate(world):
+            if "tick_timer" in tile and tile["tick_timer"] > -1: 
+                tile["tick_timer"] -= 1
+                temp_new_blocks.append({"id":tile_id,"tile":tile})  
         power_capacity = 0
-        if tick == 44:
-            temp_new_blocks = []
-            print("a")
-            print(chat)
+        if tick == 59:
             tick = 0
+            power_capacity = 0
+            power_capacity_current = 0
+            power_max = 0
+            power_usage = 0
             for tile_id, tile in enumerate(world):
-                if tile["tile"] == "biomass_burner":
-                    power_capacity += 100
+                if tile["building"] == "biomass_burner":
+                    power_max += 100       
+                    if tile["timer"] == 0 and not power_down:
+                        if tile["inventory"] != {} and tile["inventory"]["amount"] > 1:
+                            tile["timer"] = 30
+                            tile["inventory"]["amount"] -= 1
+                            tile["tick_timer"] = 30*60
+                            power_capacity += 100  
+                            power_capacity_current +=100
+                            temp_new_blocks.append({"id":tile_id,"tile":tile})
+                    elif not power_down:
+                        tile["timer"] -= 1
+                        power_capacity += 100  
+
+                        temp_new_blocks.append({"id":tile_id,"tile":tile})                        
                 elif tile["tile"] == "coal_plant" and tile["part"] == 1:
-                    power_capacity += 250
-                elif tile["tile"] == "drill" and tile["part"] == 1:
-                    power_capacity -= 25
-                if tile["tile"] == "grass" and tile["building"] == None: #and random.randint(0, 25) == 0
-                    world[tile_id]["tile"] = "leaves"
-                    #print("a")
-                    temp_new_blocks.append({"id": tile_id, "tile": world[tile_id]})
-        clock.tick(45)
+                    #power_capacity += 250
+                    pass                
+            for tile_id, tile in enumerate(world):
+                if tile["building"] == "drill" and tile["part"] == 1 and (power_capacity >= 10 or not(power_down) and power_capacity >= 10):
+                    power_capacity -= 10
+                    power_usage += 10
+                    tile["inventory"]["amount"] += 1
+
+                    temp_new_blocks.append({"id":tile_id,"tile":tile})                    
+                elif tile["building"] == "drill" and tile["part"] == 1 and power_capacity < 10:
+                    power_down = True
+                if tile["building"] == "smelter" and tile["part"] == 1:# and (power_capacity >= 15 or not(power_down) and power_capacity >= 15):
+                    power_capacity -= 15
+                    power_usage += 15
+                    if tile["timer"] == 0 and tile["recepie"] != -1:
+                        if tile["inventory"][1] != {}:
+                            
+                            tile["inventory"][1]["amount"] += processing_recepies[tile["building"]][tile["recepie"]]["output"]["amount"]
+                            tile["timer"] = -1
+                        elif tile["inventory"][1] == {}:
+                            tile["inventory"][1] = processing_recepies[tile["building"]][tile["recepie"]]["output"].copy()
+                            tile["timer"] = -1
+                    if tile["inventory"][0] != {} and tile["inventory"][0]["amount"] >= processing_recepies[tile["building"]][tile["recepie"]]["required"][0][1] and tile["timer"] == -1:
+                        tile["timer"] = processing_recepies[tile["building"]][tile["recepie"]]["time"]
+                        tile["tick_timer"]  = (processing_recepies[tile["building"]][tile["recepie"]]["time"]+1)*60
+                        if tile["inventory"][0]["amount"] > processing_recepies[tile["building"]][tile["recepie"]]["required"][0][1]:
+                            tile["inventory"][0]["amount"] -= processing_recepies[tile["building"]][tile["recepie"]]["required"][0][1]
+                        elif tile["inventory"][0]["amount"] == processing_recepies[tile["building"]][tile["recepie"]]["required"][0][1]:
+                            tile["inventory"][0] = {}
+                        temp_new_blocks.append({"id":tile_id,"tile":tile})  
+                    elif tile["timer"]  >= 1:
+                        tile["timer"] -=1
+                        temp_new_blocks.append({"id":tile_id,"tile":tile})  
+                elif tile["building"] == "smelter" and tile["part"] == 1 and power_capacity < 15:
+                    power_down = True
+                if tile["tile"] == "grass" and random.randint(0, 1) == 0 and tile["building"] == None:
+                    tile["tile"] = "leaves"
+                    temp_new_blocks.append({"id":tile_id,"tile":tile})  
+        clock.tick(60)
         tick += 1
 
 
@@ -167,7 +246,7 @@ for i in range(0, 3):
         world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "grass", "part": 0, "rotation": 0}
         starting_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
         if i == 1 and i1 == 1:
-            world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "resin _tree", "part": 0, "rotation": 0}
+            world[(x + i) + ((y + i1) * world_len)] = {"item": None, "building": None, "tile": "resin_ore", "part": 0, "rotation": 0}
             starting_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})
 for j in range(0,5):
     for l in range(0, int(world_len / 100)):
@@ -186,7 +265,7 @@ while running:
         connection, address = serverSocket.accept()
         try:
             nickname = connection.recv(8192).decode("utf-8")
-            reply = {"starting_blocks": starting_blocks}
+            reply = {"starting_blocks": starting_blocks,"new_blocks":new_blocks}
             reply = json.dumps(reply)
             connection.send((reply + "=").encode())
         except Exception as exc:

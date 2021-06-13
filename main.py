@@ -447,6 +447,7 @@ dosfontbig = pg.font.Font(os.path.join("res", "dosfont.ttf"), 24)
 dosfont125 = pg.font.Font(os.path.join("res", "dosfont.ttf"), 18)
 pos = [int(world_len / 2), int(world_len / 2)]
 menubar = []
+pg.display.set_icon(pg.image.load(os.path.join("res","icon.png")))
 
 sounds = {
     "msg":pg.mixer.Sound(os.path.join("res","snd","msg.wav"))
@@ -1290,7 +1291,7 @@ while 1:
                     tile["inventory"]["amount"] += 1
                 elif tile["building"] == "drill" and tile["part"] == 1 and power_capacity < 10:
                     power_down = True
-                if tile["building"] == "smelter" and tile["part"] == 1:# and (power_capacity >= 15 or not(power_down) and power_capacity >= 15):
+                if tile["building"] == "smelter" and tile["part"] == 1 and (power_capacity >= 15 or not(power_down) and power_capacity >= 15):
                     power_capacity -= 15
                     power_usage += 15
                     if tile["timer"] == 0 and tile["recepie"] != -1:
@@ -1489,6 +1490,7 @@ while 1:
                   
                 tick = 0            
                 
+        if tick == 59: tick = 0
         if recent_messages != []:
             for msg_id,msg in reversed(list(enumerate(recent_messages))):
                 if msg["timer"] <= 0:

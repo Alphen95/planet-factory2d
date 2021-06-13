@@ -2,3 +2,8 @@
 .vs_code
 logs/*.*
 .DS_Store
+logs
+build/
+dist/
+setup.py
+

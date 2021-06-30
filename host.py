@@ -66,48 +66,57 @@ class Client:
         self.rot = 0
         self.state = "default"
         self.id = ID
+        self.newBlocks = []
         self.pos = [0, 0]
         self.thread = threading.Thread(target=self.thread)
         self.thread.start()
         self.player = "alphen"
+        self.updBlocks = []
 
     def thread(self):
         running = True
         global new_blocks, starting_blocks, clients, temp_new_blocks,chat,world
 
         while running:
-            try:
-                block_updated = False
-                received = ""
-                while True:
-                    received += self.socket.recv(8192).decode("utf-8")
-                    if not received:
-                        running = False
-                    if received[-1] == "=":
-                        received = received[:-1]
-                        break
-                data = json.loads(received)
-                received_new_blocks = data["new_blocks"]
-                for block in received_new_blocks:
-                    new_blocks.append(block)
-                    world[block["id"]] = block["tile"]  
-                for temp_block in data["temp_new_blocks"]:
-                    world[temp_block["id"]] = temp_block["tile"]
-                    temp_new_blocks.append(temp_block)
-                if data["msg"] != "":
-                    chat.append({"user":self.nickname,"text":data["msg"]})
-                power_down = data["power_down"]
-                self.pos = data["self"][0]
-                self.state = data["self"][1]
-                self.rot = data["self"][2]
-                self.player = data["self"][3]
-                reply = {"new_blocks": [], "temp_new_blocks":temp_new_blocks,"chat":chat,"power":[power_down,power_capacity,power_capacity_current,power_max,power_usage]}
-                if not block_updated: reply["new_blocks"]= new_blocks
-                reply["users"] = [[c.pos, c.nickname,c.state,c.rot,c.player] for c in clients if c.id != self.id]
-                self.socket.send((json.dumps(reply) + "=").encode())
-            except Exception as ex:
-                print("[EXCEPTION]", ex)
-                break
+            #try:
+            block_updated = False
+            received = ""
+            while True:
+                received += self.socket.recv(8192).decode("utf-8")
+                if not received:
+                    running = False
+                if received[-1] == "=":
+                    received = received[:-1]
+                    break
+            data = json.loads(received)
+            for bl in data["new_blocks"]:
+                world[bl["id"]] = bl["tile"] 
+            for bl in data["upd_blocks"]:
+                world[bl["id"]] = bl["tile"] 
+            for c in clients:
+                for bl in data["new_blocks"]:
+                    c.newBlocks.append(bl)
+            for c in clients:
+                for bl in data["upd_blocks"]:
+                    c.newBlocks.append(bl)
+            for temp_block in data["temp_new_blocks"]:
+                world[temp_block["id"]] = temp_block["tile"]
+                temp_new_blocks.append(temp_block)
+            if data["msg"] != "":
+                chat.append({"user":self.nickname,"text":data["msg"]})
+            power_down = data["power_down"]
+            self.pos = data["self"][0]
+            self.state = data["self"][1]
+            self.rot = data["self"][2]
+            self.player = data["self"][3]
+            reply = {"new_blocks": self.newBlocks, "upd_blocks":self.updBlocks, "temp_new_blocks":temp_new_blocks,"chat":chat,"power":[power_down,power_capacity,power_capacity_current,power_max,power_usage]}
+            self.newBlocks = []
+            self.updBlocks = []
+            reply["users"] = [[c.pos, c.nickname,c.state,c.rot,c.player] for c in clients if c.id != self.id]
+            self.socket.send((json.dumps(reply) + "=").encode())
+            #except Exception as ex:
+                #print("[EXCEPTION]", ex)
+                #break
 
         print("[INFO] {} has disconnected".format(self.nickname))
         chat.append({"user":"Server","text":"{} has disconnected".format(self.nickname)})
@@ -121,9 +130,10 @@ def globalUpdateCycle():
         for tile_id,tile in enumerate(world):
             if "tick_timer" in tile and tile["tick_timer"] > -1: 
                 tile["tick_timer"] -= 1
-                temp_new_blocks.append({"id":tile_id,"tile":tile})  
+                for c in clients:c.newBlocks.append({"id":tile_id,"tile":tile})     
         power_capacity = 0
         if tick == 59:
+            print("a")
             tick = 0
             power_capacity = 0
             power_capacity_current = 0
@@ -139,12 +149,10 @@ def globalUpdateCycle():
                             tile["tick_timer"] = 30*60
                             power_capacity += 100  
                             power_capacity_current +=100
-                            temp_new_blocks.append({"id":tile_id,"tile":tile})
+                            for c in clients:c.updBlocks.append({"id":tile_id,"tile":tile})      
                     elif not power_down:
                         tile["timer"] -= 1
-                        power_capacity += 100  
-
-                        temp_new_blocks.append({"id":tile_id,"tile":tile})                        
+                        power_capacity += 100                      
                 elif tile["tile"] == "coal_plant" and tile["part"] == 1:
                     #power_capacity += 250
                     pass                
@@ -154,36 +162,42 @@ def globalUpdateCycle():
                     power_usage += 10
                     tile["inventory"]["amount"] += 1
 
-                    temp_new_blocks.append({"id":tile_id,"tile":tile})                    
+                    for c in clients:c.updBlocks.append({"id":tile_id,"tile":tile})                    
                 elif tile["building"] == "drill" and tile["part"] == 1 and power_capacity < 10:
                     power_down = True
                 if tile["building"] == "smelter" and tile["part"] == 1:# and (power_capacity >= 15 or not(power_down) and power_capacity >= 15):
+                    print(2)
                     power_capacity -= 15
                     power_usage += 15
                     if tile["timer"] == 0 and tile["recepie"] != -1:
+                        print(3)
                         if tile["inventory"][1] != {}:
                             
                             tile["inventory"][1]["amount"] += processing_recepies[tile["building"]][tile["recepie"]]["output"]["amount"]
                             tile["timer"] = -1
+                            for c in clients:c.updBlocks.append({"id":tile_id,"tile":tile})                               
                         elif tile["inventory"][1] == {}:
                             tile["inventory"][1] = processing_recepies[tile["building"]][tile["recepie"]]["output"].copy()
                             tile["timer"] = -1
+                            for c in clients:c.updBlocks.append({"id":tile_id,"tile":tile})                                    
                     if tile["inventory"][0] != {} and tile["inventory"][0]["amount"] >= processing_recepies[tile["building"]][tile["recepie"]]["required"][0][1] and tile["timer"] == -1:
+                        print(5)
                         tile["timer"] = processing_recepies[tile["building"]][tile["recepie"]]["time"]
                         tile["tick_timer"]  = (processing_recepies[tile["building"]][tile["recepie"]]["time"]+1)*60
                         if tile["inventory"][0]["amount"] > processing_recepies[tile["building"]][tile["recepie"]]["required"][0][1]:
                             tile["inventory"][0]["amount"] -= processing_recepies[tile["building"]][tile["recepie"]]["required"][0][1]
                         elif tile["inventory"][0]["amount"] == processing_recepies[tile["building"]][tile["recepie"]]["required"][0][1]:
                             tile["inventory"][0] = {}
-                        temp_new_blocks.append({"id":tile_id,"tile":tile})  
+                        for c in clients:c.updBlocks.append({"id":tile_id,"tile":tile})                                 
                     elif tile["timer"]  >= 1:
+                        print(4)
                         tile["timer"] -=1
-                        temp_new_blocks.append({"id":tile_id,"tile":tile})  
+                        for c in clients:c.updBlocks.append({"id":tile_id,"tile":tile})                                   
                 elif tile["building"] == "smelter" and tile["part"] == 1 and power_capacity < 15:
                     power_down = True
                 if tile["tile"] == "grass" and random.randint(0, 1) == 0 and tile["building"] == None:
                     tile["tile"] = "leaves"
-                    temp_new_blocks.append({"id":tile_id,"tile":tile})  
+                    for c in clients:c.newBlocks.append({"id":tile_id,"tile":tile})     
         clock.tick(60)
         tick += 1
 
@@ -265,7 +279,7 @@ while running:
         connection, address = serverSocket.accept()
         try:
             nickname = connection.recv(8192).decode("utf-8")
-            reply = {"starting_blocks": starting_blocks,"new_blocks":new_blocks}
+            reply = {"world":world}
             reply = json.dumps(reply)
             connection.send((reply + "=").encode())
         except Exception as exc:

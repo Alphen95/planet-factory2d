@@ -197,7 +197,178 @@ def globalUpdateCycle():
                     power_down = True
                 if tile["tile"] == "grass" and random.randint(0, 1) == 0 and tile["building"] == None:
                     tile["tile"] = "leaves"
-                    for c in clients:c.newBlocks.append({"id":tile_id,"tile":tile})     
+                    for c in clients:c.newBlocks.append({"id":tile_id,"tile":tile})
+                for tile_id, tile in enumerate(world):
+
+                    if x == world_len:
+                        y += 1
+                        x = 0
+                    if tile["building"] == "drill" and tile["part"] == 1 and "inventory" in tile and tile["inventory"]["amount"] >= 1:
+                        if tile["rotation"] == 0 and x + 3 < world_len and world[(x + 2) + (y * world_len)]["building"] == "conveyor_belt" and world[(x + 2) + (y * world_len)]["inventory"] == {}:
+                            world[(x + 2) + (y * world_len)]["inventory"] = {"item": tile["inventory"]["item"]}
+                            tile["inventory"]["amount"] -= 1
+                            world[(x + 2) + (y * world_len)]["not_gotta_work"] = True
+                        elif tile["rotation"] == 90 and y - 2 >= 0 and world[x + ((y - 2) * world_len)]["building"] == "conveyor_belt" and world[x + ((y - 2) * world_len)]["inventory"] == {}:
+                            world[x + ((y - 2) * world_len)]["inventory"] = {"item": tile["inventory"]["item"]}
+                            tile["inventory"]["amount"] -= 1
+                            world[x + ((y - 2) * world_len)]["not_gotta_work"] = True
+                        elif tile["rotation"] == 180 and x - 2 >= 0 and world[(x - 2) + (y * world_len)]["building"] == "conveyor_belt" and world[(x - 2) + (y * world_len)]["inventory"] == {}:
+                            world[(x - 2) + (y * world_len)]["inventory"] = {"item": tile["inventory"]["item"]}
+                            tile["inventory"]["amount"] -= 1
+                            world[(x - 2) + (y * world_len)]["not_gotta_work"] = True
+                        elif tile["rotation"] == 270 and y + 3 < world_len and world[x + ((y + 2) * world_len)]["building"] == "conveyor_belt" and world[x + ((y + 2) * world_len)]["inventory"] == {}:
+                            world[x + ((y + 2) * world_len)]["inventory"] = {"item": tile["inventory"]["item"]}
+                            tile["inventory"]["amount"] -= 1
+                            world[x + ((y + 2) * world_len)]["not_gotta_work"] = True
+                    elif tile["building"] in conveyor_acceptable_processors and tile["part"] == conveyor_acceptable_processors[tile["building"]] and "inventory" in tile and tile["inventory"][-1] != {}:
+                        if tile["rotation"] == 0 and x + 2 < world_len and world[(x + 1) + (y * world_len)]["building"] == "conveyor_belt" and world[(x + 1) + (y * world_len)]["inventory"] == {}:
+                            world[(x + 1) + (y * world_len)]["inventory"] = {"item": tile["inventory"][-1]["item"]}
+                            if tile["inventory"][-1]["amount"] != 1:
+                                tile["inventory"][-1]["amount"] -= 1
+                            else:
+                                tile["inventory"][-1] = {}
+                            world[(x + 1) + (y * world_len)]["not_gotta_work"] = True
+                        elif tile["rotation"] == 90 and y - 1 >= 0 and world[x + ((y - 1) * world_len)]["building"] == "conveyor_belt" and world[x + ((y - 1) * world_len)]["inventory"] == {}:
+                            world[x + ((y - 1) * world_len)]["inventory"] = {"item": tile["inventory"][-1]["item"]}
+                            if tile["inventory"][-1]["amount"] != 1:
+                                tile["inventory"][-1]["amount"] -= 1
+                            else:
+                                tile["inventory"][-1] = {}
+                            world[x + ((y - 2) * world_len)]["not_gotta_work"] = True
+                        elif tile["rotation"] == 180 and x - 1 >= 0 and world[(x - 1) + (y * world_len)]["building"] == "conveyor_belt" and world[(x - 1) + (y * world_len)]["inventory"] == {}:
+                            world[(x - 1) + (y * world_len)]["inventory"] = {"item": tile["inventory"][-1]["item"]}
+                            if tile["inventory"][-1]["amount"] != 1:
+                                tile["inventory"][-1]["amount"] -= 1
+                            else:
+                                tile["inventory"][-1] = {}
+                            world[(x - 1) + (y * world_len)]["not_gotta_work"] = True
+                        elif tile["rotation"] == 270 and y + 2 < world_len and world[x + ((y + 1) * world_len)]["building"] == "conveyor_belt" and world[x + ((y + 1) * world_len)]["inventory"] == {}:
+                            world[x + ((y + 1) * world_len)]["inventory"] = {"item": tile["inventory"][-1]["item"]}
+                            if tile["inventory"][-1]["amount"] != 1:
+                                tile["inventory"][-1]["amount"] -= 1
+                            else:
+                                tile["inventory"][-1] = {}
+                            world[x + ((y + 1) * world_len)]["not_gotta_work"] = True
+                    elif tile["building"] == "storage_container" and tile["part"] == 2:
+                        for item_id, item in enumerate(tile["inventory"]):
+                            if item != {}:
+                                if tile["rotation"] == 0 and x + 2 < world_len and world[(x + 1) + (y * world_len)]["building"] == "conveyor_belt" and world[(x + 1) + (y * world_len)]["inventory"] == {}:
+                                    world[(x + 1) + (y * world_len)]["inventory"] = {"item": tile["inventory"][item_id]["item"]}
+                                    if tile["inventory"][item_id]["amount"] != 1:
+                                        tile["inventory"][item_id]["amount"] -= 1
+                                    else:
+                                        tile["inventory"][item_id] = {}
+                                    world[(x + 1) + (y * world_len)]["not_gotta_work"] = True
+                                elif tile["rotation"] == 90 and y - 1 >= 0 and world[x + ((y - 1) * world_len)]["building"] == "conveyor_belt" and world[x + ((y - 1) * world_len)]["inventory"] == {}:
+                                    world[x + ((y - 1) * world_len)]["inventory"] = {"item": tile["inventory"][item_id]["item"]}
+                                    if tile["inventory"][item_id]["amount"] != 1:
+                                        tile["inventory"][item_id]["amount"] -= 1
+                                    else:
+                                        tile["inventory"][item_id] = {}
+                                    world[x + ((y - 2) * world_len)]["not_gotta_work"] = True
+                                elif tile["rotation"] == 180 and x - 1 >= 0 and world[(x - 1) + (y * world_len)]["building"] == "conveyor_belt" and world[(x - 1) + (y * world_len)]["inventory"] == {}:
+                                    world[(x - 1) + (y * world_len)]["inventory"] = {"item": tile["inventory"][item_id]["item"]}
+                                    if tile["inventory"][item_id]["amount"] != 1:
+                                        tile["inventory"][item_id]["amount"] -= 1
+                                    else:
+                                        tile["inventory"][item_id] = {}
+                                    world[(x - 1) + (y * world_len)]["not_gotta_work"] = True
+                                elif tile["rotation"] == 270 and y + 2 < world_len and world[x + ((y + 1) * world_len)]["building"] == "conveyor_belt" and world[x + ((y + 1) * world_len)]["inventory"] == {}:
+                                    world[x + ((y + 1) * world_len)]["inventory"] = {"item": tile["inventory"][item_id]["item"]}
+                                    if tile["inventory"][item_id]["amount"] != 1:
+                                        tile["inventory"][item_id]["amount"] -= 1
+                                    else:
+                                        tile["inventory"][item_id] = {}
+                                    world[x + ((y + 1) * world_len)]["not_gotta_work"] = True
+                                break
+                    elif tile["building"] == "conveyor_belt" and "item" in tile["inventory"]:
+                        if tile["rotation"] == 0 and y - 1 < world_len and world[(x + 1) + (y * world_len)]["rotation"] == 0 and world[(x + 1) + (y * world_len)]["building"] in processors and processing_recepies[world[(x + 1) + (y * world_len)]["building"]][world[(x + 1) + (y * world_len)]["recepie"]]["required"][world[(x + 1) + (y * world_len)]["part"] - 1][0] == tile["inventory"]["item"]:
+                            if world[(x + 1) + (y * world_len)]["inventory"][world[(x + 1) + (y * world_len)]["part"] - 1] == {}:
+                                world[(x + 1) + (y * world_len)]["inventory"][world[(x + 1) + (y * world_len)]["part"] - 1] = {"item": tile["inventory"]["item"], "amount": 1}
+                            else:
+                                world[(x + 1) + (y * world_len)]["inventory"][world[(x + 1) + (y * world_len)]["part"] - 1]["amount"] += 1
+                            tile["inventory"] = {}
+                        elif tile["rotation"] == 90 and y - 1 < world_len and world[x + ((y - 1) * world_len)]["rotation"] == 90 and world[x + ((y - 1) * world_len)]["building"] in processors and processing_recepies[world[x + ((y - 1) * world_len)]["building"]][world[x + ((y - 1) * world_len)]["recepie"]]["required"][world[x + ((y - 1) * world_len)]["part"] - 1][0] == tile["inventory"]["item"]:
+                            if world[x + ((y - 1) * world_len)]["inventory"][world[x + ((y - 1) * world_len)]["part"] - 1] == {}:
+                                world[x + ((y - 1) * world_len)]["inventory"][world[x + ((y - 1) * world_len)]["part"] - 1] = {"item": tile["inventory"]["item"], "amount": 1}
+                            else:
+                                world[x + ((y - 1) * world_len)]["inventory"][world[x + ((y - 1) * world_len)]["part"] - 1]["amount"] += 1
+                            tile["inventory"] = {}
+                        elif tile["rotation"] == 180 and y - 1 < world_len and world[(x - 1) + (y * world_len)]["rotation"] == 180 and world[(x - 1) + (y * world_len)]["building"] in processors and processing_recepies[world[(x - 1) + (y * world_len)]["building"]][world[(x - 1) + (y * world_len)]["recepie"]]["required"][world[(x - 1) + (y * world_len)]["part"] - 1][0] == tile["inventory"]["item"]:
+                            if world[(x - 1) + (y * world_len)]["inventory"][world[(x - 1) + (y * world_len)]["part"] - 1] == {}:
+                                world[(x - 1) + (y * world_len)]["inventory"][world[(x - 1) + (y * world_len)]["part"] - 1] = {"item": tile["inventory"]["item"], "amount": 1}
+                            else:
+                                world[(x - 1) + (y * world_len)]["inventory"][world[(x - 1) + (y * world_len)]["part"] - 1]["amount"] += 1
+                            tile["inventory"] = {}
+                        elif tile["rotation"] == 270 and y + 1 < world_len and world[x + ((y + 1) * world_len)]["rotation"] == 270 and world[x + ((y + 1) * world_len)]["building"] in processors and processing_recepies[world[x + ((y + 1) * world_len)]["building"]][world[x + ((y + 1) * world_len)]["recepie"]]["required"][world[x + ((y + 1) * world_len)]["part"] - 1][0] == tile["inventory"]["item"]:
+                            if world[x + ((y + 1) * world_len)]["inventory"][world[x + ((y + 1) * world_len)]["part"] - 1] == {}:
+                                world[x + ((y + 1) * world_len)]["inventory"][world[x + ((y + 1) * world_len)]["part"] - 1] = {"item": tile["inventory"]["item"], "amount": 1}
+                            else:
+                                world[x + ((y + 1) * world_len)]["inventory"][world[x + ((y + 1) * world_len)]["part"] - 1]["amount"] += 1
+                            tile["inventory"] = {}
+                        elif tile["rotation"] == 0 and y - 1 < world_len and world[(x + 1) + (y * world_len)]["rotation"] == 0 and world[(x + 1) + (y * world_len)]["building"] == "storage_container":
+                            for item_id, item in enumerate(world[(x + 1) + (y * world_len)]["inventory"]):
+                                if item == {}:
+                                    world[(x + 1) + (y * world_len)]["inventory"][item_id] = {"item": tile["inventory"]["item"], "amount": 1}
+                                    tile["inventory"] = {}
+                                    break
+                                elif item != {} and item["item"] == tile["inventory"]["item"] and item["amount"] < 200:
+                                    world[(x + 1) + (y * world_len)]["inventory"][item_id]["amount"] += 1
+                                    tile["inventory"] = {}
+                                    break
+                        elif tile["rotation"] == 90 and y - 1 < world_len and world[x + ((y - 1) * world_len)]["rotation"] == 90 and world[x + ((y - 1) * world_len)]["building"] == "storage_container":
+                            for item_id, item in enumerate(world[x + ((y - 1) * world_len)]["inventory"]):
+                                if item == {}:
+                                    world[x + ((y - 1) * world_len)]["inventory"][item_id] = {"item": tile["inventory"]["item"], "amount": 1}
+                                    tile["inventory"] = {}
+                                    break
+                                elif item != {} and item["item"] == tile["inventory"]["item"] and item["amount"] < 200:
+                                    world[x + ((y - 1) * world_len)]["inventory"][item_id]["amount"] += 1
+                                    tile["inventory"] = {}
+                                    break
+                        elif tile["rotation"] == 180 and y - 1 < world_len and world[(x - 1) + (y * world_len)][item_id]["rotation"] == 180 and world[(x - 1) + (y * world_len)]["building"] == "storage_container":
+                            for item_id, item in enumerate(world[(x - 1) + (y * world_len)]["inventory"]):
+                                if item == {}:
+                                    world[(x - 1) + (y * world_len)]["inventory"][item_id] = {"item": tile["inventory"]["item"], "amount": 1}
+                                    tile["inventory"] = {}
+                                    break
+                                elif item != {} and item["item"] == tile["inventory"]["item"] and item["amount"] < 200:
+                                    world[(x - 1) + (y * world_len)]["inventory"][item_id]["amount"] += 1
+                                    tile["inventory"] = {}
+                                    break
+                        elif tile["rotation"] == 270 and y + 1 < world_len and world[x + ((y + 1) * world_len)]["rotation"] == 270 and world[x + ((y + 1) * world_len)]["building"] == "storage_container":
+                            for item_id, item in enumerate(world[x + ((y + 1) * world_len)]["inventory"]):
+                                if item == {}:
+                                    world[x + ((y + 1) * world_len)]["inventory"][item_id] = {"item": tile["inventory"]["item"], "amount": 1}
+                                    tile["inventory"] = {}
+                                    break
+                                elif item != {} and item["item"] == tile["inventory"]["item"] and item["amount"] < 200:
+                                    world[x + ((y + 1) * world_len)]["inventory"][item_id]["amount"] += 1
+                                    tile["inventory"] = {}
+                                    break
+                        elif tile["rotation"] == 0 and x + 1 < world_len and world[(x + 1) + (y * world_len)]["building"] == "conveyor_belt" and world[(x + 1) + (y * world_len)]["inventory"] == {} and not "not_gotta_work" in tile:
+                            world[(x + 1) + (y * world_len)]["inventory"] = {"item": tile["inventory"]["item"]}
+                            tile["inventory"] = {}
+                            world[(x + 1) + (y * world_len)]["not_gotta_work"] = True
+                        elif tile["rotation"] == 90 and y - 1 >= 0 and world[x + ((y - 1) * world_len)]["building"] == "conveyor_belt" and world[x + ((y - 1) * world_len)]["inventory"] == {} and not "not_gotta_work" in tile:
+                            world[x + ((y - 1) * world_len)]["inventory"] = {"item": tile["inventory"]["item"]}
+                            tile["inventory"] = {}
+                            world[x + ((y - 1) * world_len)]["not_gotta_work"] = True
+                        elif tile["rotation"] == 180 and x - 1 >= 0 and world[(x - 1) + (y * world_len)]["building"] == "conveyor_belt" and world[(x - 1) + (y * world_len)]["inventory"] == {} and not "not_gotta_work" in tile:
+                            world[(x - 1) + (y * world_len)]["inventory"] = {"item": tile["inventory"]["item"]}
+                            tile["inventory"] = {}
+                            world[(x - 1) + (y * world_len)]["not_gotta_work"] = True
+                        elif tile["rotation"] == 270 and y + 1 < world_len and world[x + ((y + 1) * world_len)]["building"] == "conveyor_belt" and world[x + ((y + 1) * world_len)]["inventory"] == {} and not "not_gotta_work" in tile:
+                            world[x + ((y + 1) * world_len)]["inventory"] = {"item": tile["inventory"]["item"]}
+                            tile["inventory"] = {}
+                            world[x + ((y + 1) * world_len)]["not_gotta_work"] = True
+    
+                    for c in clients:c.updBlocks.append({"id":tile_id,"tile":tile})                    
+                    x += 1
+                for tile in world:
+                    if "not_gotta_work" in tile:
+                        tile.pop("not_gotta_work")
+                        for c in clients:c.updBlocks.append({"id":tile_id,"tile":tile})
         clock.tick(60)
         tick += 1
 

@@ -10,7 +10,7 @@ import threading
 import json
 from pprint import pprint
 
-VERSION = "0.7.3"
+VERSION = "0.7.3.1"
 effects = [(9, 9)]
 os.makedirs("logs", exist_ok=True)
 log_file = open(os.path.join("logs", "log-{}.txt".format(str(datetime.datetime.now()).replace(":", "_")[:-7])), "w+")
@@ -50,10 +50,9 @@ taunt_timer = 0
 power_down = False
 show_taunt_menu = False
 release_notes = [
-    "PreRelease 0.7.3",
+    "PreRelease 0.7.3.1",
     "Automation Update Part 2 BETA",
-    "Added fixes, updated timers",
-    "and added chips."
+    "Minor-ish fixes"
 
 ]
 
@@ -78,179 +77,16 @@ item_costs = {
     ("basic", "cable"): 10,
     ("basic", "rod"): 5,
     ("basic", "graphite_plate"): 5,
-    ("electronics", "chip"): 5,
+    ("electronics", "chip"): 20,
     ("uranium", "bio"): 35
 
 }
-recepies = [
-    {
-        "name": "Iron ingot",
-        "required_text": "Iron ore",
-        "required": [[("unprocessed", "iron"), 1]],
-        "output":{"item": ("ingot", "iron"), "amount": 1}
-    },
-    {
-        "name": "Copper ingot",
-        "required_text": "Copper ore",
-        "required": [[("unprocessed", "copper"), 1]],
-        "output":{"item": ("ingot", "copper"), "amount": 1}
-    },
-    {
-        "name": "Tungsten ingot",
-        "required_text": "Tungsten ore",
-        "required": [[("unprocessed", "tungsten"), 1]],
-        "output":{"item": ("ingot", "tungsten"), "amount": 1}
-    },
-    {
-        "name": "Resin sheet",
-        "required_text": "Sticky resin x2",
-        "required": [[("unprocessed", "resin"), 2]],
-        "output":{"item": ("ingot", "resin"), "amount": 1}
-    },
-    {
-        "name": "Graphite plate",
-        "required_text": "Coal x2",
-        "required": [[("unprocessed", "coal"), 2]],
-        "output":{"item": ("basic", "graphite_plate"), "amount": 1}
-    },
-    {
-        "name": "Iron plate x3",
-        "required_text": "Iron ingot",
-        "required": [[("ingot", "iron"), 1]],
-        "output":{"item": ("basic", "plate"), "amount": 3}
-    },
-    {
-        "name": "Iron rod x2",
-        "required_text": "Iron ingot",
-        "required": [[("ingot", "iron"), 1]],
-        "output":{"item": ("basic", "rod"), "amount": 2}
-    },
-    {
-        "name": "Screws x10",
-        "required_text": "Iron ingot",
-        "required": [[("ingot", "iron"), 1]],
-        "output":{"item": ("basic", "screws"), "amount": 10}
-    },
-    {
-        "name": "Copper wire x5",
-        "required_text": "Copper ingot",
-        "required": [[("ingot", "copper"), 1]],
-        "output":{"item": ("basic", "wire"), "amount": 5}
-    },
-    {
-        "name": "Cable",
-        "required_text": ("Copper wire", "Rubber sheet"),
-        "required": [[("basic", "wire"), 1], [("ingot", "resin"), 1]],
-        "output":{"item": ("basic", "cable"), "amount": 1}
-    },
-    {
-        "name": "Portable drill",
-        "required_text": ("Iron plate x2", "Iron rod x3"),
-        "required": [[("basic", "plate"), 2], [("basic", "rod"), 3]],
-        "output":{"item": ("basic", "drill"), "amount": 1}
-    },
-    {
-        "name": "Biofiber x2",
-        "required_text": "Leaves x3",
-        "required": [[("bio", "leaves"), 3]],
-        "output":{"item": ("bio", "fiber"), "amount": 2}
-    },
-    {
-        "name": "BioUranium fuel rod x6",
-        "required_text": ("Biofiber x3", "Iron plate x5"),
-        "required": [[("bio", "fiber"), 3], [("basic", "plate"), 5]],
-        "output":{"item": ("uranium", "bio"), "amount": 6}
-    },
-    {
-        "name": "Chip x2",
-        "required_text": ("Graphite plate", "Copper wire"),
-        "required": [[("basic", "graphite_plate"), 1], [("basic", "wire"), 1]],
-        "output":{"item": ("electronics", "chip"), "amount": 2}
-    },
-    {
-        "name": "Hi-tech glasses",
-        "required_text": ("Iron plate x3", "Cable x2"),
-        "required": [[("basic", "cable"), 2], [("basic", "plate"), 3]],
-        "output":{"item": ("wearables", "varu_glasses"), "amount": 1}
-    },
-]
-
-processing_recepies = {
-    "smelter": [
-        {
-            "name": "Iron ingot",
-            "required_text": "Iron ore",
-            "required": [[("unprocessed", "iron"), 1]],
-            "output":{"item": ("ingot", "iron"), "amount": 1},
-            "time": 2
-        },
-        {
-            "name": "Copper ingot",
-            "required_text": "Copper ore",
-            "required": [[("unprocessed", "copper"), 1]],
-            "output":{"item": ("ingot", "copper"), "amount": 1},
-            "time": 2
-        },
-        {
-            "name": "Tungsten ingot",
-            "required_text": "Tungsten ore",
-            "required": [[("unprocessed", "tungsten"), 1]],
-            "output":{"item": ("ingot", "tungsten"), "amount": 1},
-            "time": 3
-        },
-        {
-            "name": "Resin sheet",
-            "required_text": "Sticky resin",
-            "required": [[("unprocessed", "resin"), 1]],
-            "output":{"item": ("ingot", "resin"), "amount": 1},
-            "time": 3
-        },
-    ],
-    "crafter_lv1": [
-        {
-            "name": "Graphite plate",
-            "required_text": "Coal x1",
-            "required": [[("unprocessed", "coal"), 1]],
-            "output":{"item": ("basic", "graphite_plate"), "amount": 1},
-            "time": 3
-        },
-        {
-            "name": "Iron plate x3",
-            "required_text": "Iron ingot",
-            "required": [[("ingot", "iron"), 1]],
-            "output":{"item": ("basic", "plate"), "amount": 3},
-            "time": 2
-        },
-        {
-            "name": "Iron rod x2",
-            "required_text": "Iron ingot",
-            "required": [[("ingot", "iron"), 1]],
-            "output":{"item": ("basic", "rod"), "amount": 2},
-            "time": 2
-        },
-        {
-            "name": "Screws x10",
-            "required_text": "Iron ingot",
-            "required": [[("ingot", "iron"), 1]],
-            "output":{"item": ("basic", "screws"), "amount": 10},
-            "time": 1
-        },
-        {
-            "name": "Copper wire x5",
-            "required_text": "Copper ingot",
-            "required": [[("ingot", "copper"), 1]],
-            "output":{"item": ("basic", "wire"), "amount": 5},
-            "time": 1
-        },
-        {
-            "name": "Biofiber x2",
-            "required_text": "Sticky resin",
-            "required": [[("unprocessed", "resin"), 1]],
-            "output":{"item": ("bio", "fiber"), "amount": 2},
-            "time": 4
-        },       
-    ],    
-}
+with open(os.path.join("data","recepies.json")) as recepie_file:
+    all_recepies = json.loads(recepie_file.read())
+    recepies = all_recepies["handmade"][:15]
+    processing_recepies = {"smelter":all_recepies["smelter"][:2],"crafter_lv1": all_recepies["crafter_lv1"]}        
+with open(os.path.join("data","descriptions.json")) as descr_file:
+    descriptions = json.loads(descr_file.read())
 
 npc = {
     "weles": {
@@ -412,142 +248,10 @@ player = {
             json.loads(open(os.path.join("res", "player", "fury", "0", "settings.json")).read())
         ],
         "dialog": pg.image.load(os.path.join("res", "player", "fury", "dialog_avatar.png"))
-    },
-    "a": {
-        "default": [
-            pg.image.load(os.path.join("res", "player", "alphen", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "alphen", "state1.png"))
-        ],
-        "building": [
-            pg.image.load(os.path.join("res", "player", "alphen", "state0_build.png")),
-            pg.image.load(os.path.join("res", "player", "alphen", "state1_build.png"))
-        ],
-        "dig": [
-            pg.image.load(os.path.join("res", "player", "alphen", "state0_dig0.png")),
-            pg.image.load(os.path.join("res", "player", "alphen", "state1_dig0.png"))
-        ],
-        "dig_active": [
-            pg.image.load(os.path.join("res", "player", "alphen", "state0_dig1.png")),
-            pg.image.load(os.path.join("res", "player", "alphen", "state1_dig1.png"))
-        ],
-        "gesture1": [
-            pg.image.load(os.path.join("res", "player", "alphen", "state0_gesture_swing.png")),
-            pg.image.load(os.path.join("res", "player", "alphen", "state1_gesture_swing.png"))
-        ],
-        "gesture2": [
-            pg.image.load(os.path.join("res", "player", "alphen", "state0_gesture_idk.png")),
-            pg.image.load(os.path.join("res", "player", "alphen", "state1_gesture_idk.png"))
-        ],
-        "gesture3": [
-            pg.image.load(os.path.join("res", "player", "alphen", "3", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "alphen", "3", "state1.png")),
-            json.loads(open(os.path.join("res", "player", "alphen", "3", "settings.json")).read())
-        ],
-        "gesture4": [
-            pg.image.load(os.path.join("res", "player", "alphen", "4", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "alphen", "4", "state1.png")),
-            json.loads(open(os.path.join("res", "player", "alphen", "4", "settings.json")).read())
-        ],
-        "gesture5": [
-            pg.image.load(os.path.join("res", "player", "alphen", "5", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "alphen", "5", "state1.png")),
-            json.loads(open(os.path.join("res", "player", "alphen", "5", "settings.json")).read())
-        ],
-        "gesture6": [
-            pg.image.load(os.path.join("res", "player", "alphen", "6", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "alphen", "6", "state1.png")),
-            json.loads(open(os.path.join("res", "player", "alphen", "6", "settings.json")).read())
-        ],
-        "gesture7": [
-            pg.image.load(os.path.join("res", "player", "alphen", "7", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "alphen", "7", "state1.png")),
-            json.loads(open(os.path.join("res", "player", "alphen", "7", "settings.json")).read())
-        ],
-        "gesture8": [
-            pg.image.load(os.path.join("res", "player", "alphen", "8", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "alphen", "8", "state1.png")),
-            json.loads(open(os.path.join("res", "player", "alphen", "8", "settings.json")).read())
-        ],
-        "gesture9": [
-            pg.image.load(os.path.join("res", "player", "alphen", "9", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "alphen", "9", "state1.png")),
-            json.loads(open(os.path.join("res", "player", "alphen", "9", "settings.json")).read())
-        ],
-        "gesture0": [
-            pg.image.load(os.path.join("res", "player", "alphen", "0", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "alphen", "0", "state1.png")),
-            json.loads(open(os.path.join("res", "player", "alphen", "0", "settings.json")).read())
-        ],
-        "dialog": pg.image.load(os.path.join("res", "player", "alphen", "dialog_avatar.png"))
-    },
-    "f": {
-        "default": [
-            pg.image.load(os.path.join("res", "player", "fury", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "fury", "state1.png"))
-        ],
-        "building": [
-            pg.image.load(os.path.join("res", "player", "fury", "state0_build.png")),
-            pg.image.load(os.path.join("res", "player", "fury", "state1_build.png"))
-        ],
-        "dig": [
-            pg.image.load(os.path.join("res", "player", "fury", "state0_dig0.png")),
-            pg.image.load(os.path.join("res", "player", "fury", "state1_dig0.png"))
-        ],
-        "dig_active": [
-            pg.image.load(os.path.join("res", "player", "fury", "state0_dig1.png")),
-            pg.image.load(os.path.join("res", "player", "fury", "state1_dig1.png"))
-        ],
-        "gesture1": [
-            pg.image.load(os.path.join("res", "player", "fury", "state0_gesture_swing.png")),
-            pg.image.load(os.path.join("res", "player", "fury", "state1_gesture_swing.png"))
-        ],
-        "gesture2": [
-            pg.image.load(os.path.join("res", "player", "fury", "state0_gesture_idk.png")),
-            pg.image.load(os.path.join("res", "player", "fury", "state1_gesture_idk.png"))
-        ],
-        "gesture3": [
-            pg.image.load(os.path.join("res", "player", "fury", "3", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "fury", "3", "state1.png")),
-            json.loads(open(os.path.join("res", "player", "fury", "3", "settings.json")).read())
-        ],
-        "gesture4": [
-            pg.image.load(os.path.join("res", "player", "fury", "4", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "fury", "4", "state1.png")),
-            json.loads(open(os.path.join("res", "player", "fury", "4", "settings.json")).read())
-        ],
-        "gesture5": [
-            pg.image.load(os.path.join("res", "player", "fury", "5", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "fury", "5", "state1.png")),
-            json.loads(open(os.path.join("res", "player", "fury", "5", "settings.json")).read())
-        ],
-        "gesture6": [
-            pg.image.load(os.path.join("res", "player", "fury", "6", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "fury", "6", "state1.png")),
-            json.loads(open(os.path.join("res", "player", "fury", "6", "settings.json")).read())
-        ],
-        "gesture7": [
-            pg.image.load(os.path.join("res", "player", "fury", "7", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "fury", "7", "state1.png")),
-            json.loads(open(os.path.join("res", "player", "fury", "7", "settings.json")).read())
-        ],
-        "gesture8": [
-            pg.image.load(os.path.join("res", "player", "fury", "8", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "fury", "8", "state1.png")),
-            json.loads(open(os.path.join("res", "player", "fury", "8", "settings.json")).read())
-        ],
-        "gesture9": [
-            pg.image.load(os.path.join("res", "player", "fury", "9", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "fury", "9", "state1.png")),
-            json.loads(open(os.path.join("res", "player", "fury", "9", "settings.json")).read())
-        ],
-        "gesture0": [
-            pg.image.load(os.path.join("res", "player", "fury", "0", "state0.png")),
-            pg.image.load(os.path.join("res", "player", "fury", "0", "state1.png")),
-            json.loads(open(os.path.join("res", "player", "fury", "0", "settings.json")).read())
-        ],
-        "dialog": pg.image.load(os.path.join("res", "player", "fury", "dialog_avatar.png"))
     }
 }
+player["a"] = player["alphen"]
+player["f"] = player["fury"]
 
 deal_translations = {
     ("basic", "plate"): "Iron plate",
@@ -616,7 +320,12 @@ resources = {
     },
     "wearables": {
         "varu_glasses": pg.image.load(os.path.join("res", "wearables", "varu_glasses.png"))
-    }
+    },
+    "special":{
+        "carpet":pg.image.load(os.path.join("res", "resources","special", "carpet.png")),
+        "comp_set":pg.image.load(os.path.join("res", "resources","special", "computer_pack.png")),
+        #"":pg.image.load(os.path.join("res", "resources","special", ".png"))
+    },
 }
 
 buildings = {
@@ -1180,7 +889,7 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
             if x > 6:
                 x = 0
                 y += 1
-            pg.draw.rect(winobj, (0, 0, 0), (xpos + 10 + y * 153, ypos + 310 + x * 60, 150, 50))
+            pg.draw.rect(winobj, (0, 0, 0), (xpos + 10 + y * 153 + 4*y, ypos + 310 + x * 60, 150, 50))
             pg.draw.rect(winobj, (200, 200, 200), (xpos + 10 + y * 157, ypos + 310 + x * 60, 148, 48))
             text_name = dosfont.render(recepie["name"], True, (0, 0, 0))
             winobj.blit(text_name, (xpos + 10 + y * 160, ypos + 310 + x * 60))
@@ -1437,7 +1146,7 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
         winobj.blit(text_line9, (cell_size * 3.1, cell_size * 7.7))
         text_line0 = dosfontbig.render("10: {}".format(player[player_type]["gesture0"][2]["name"]), True, (0, 0, 0))
         winobj.blit(text_line0, (cell_size * 3.1, cell_size * 8.2)) #a
-    if inventory[-1] != {} and inventory[-1]["item"] == ("wearables", "varu_glasses"):
+    if "item" in inventory[-1] and inventory[-1]["item"] == ("wearables", "varu_glasses"):
         winobj.blit(pg.transform.scale(filters["varu_glasses"][0], (cell_size * 20, cell_size * 20)), (0, 0))
         for effect_pos in effects:
             winobj.blit(pg.transform.scale(filters["varu_glasses"][1], (cell_size, cell_size)), (cell_size * effect_pos[0], cell_size * effect_pos[1]))
@@ -1525,55 +1234,10 @@ while 1:
             for i in range(0, random.randint(10, 20)):
                 effects.append((random.randint(0, 19), (random.randint(0, 19))))
         for item in inventory:
-            if item == {}:
-                break
-            else:
-                if item["item"] == ("unprocessed", "iron"):
-                    item["info"] = ("Iron ore", "Basic metal.", "Used almost every-", "where.", "", "")
-                elif item["item"] == ("unprocessed", "copper"):
-                    item["info"] = ("Copper ore", "Electroconductive", "and heat-conductive", "metal.", "", "")
-                elif item["item"] == ("unprocessed", "tungsten"):
-                    item["info"] = ("Tungsten ore", "Advanced metal. Used", "to make complicated", "circutry", "", "")
-                elif item["item"] == ("unprocessed", "coal"):
-                    item["info"] = ("Coal", "Natural resource.", "Essential for making", "advanced circuits.", "", "")
-                elif item["item"] == ("unprocessed", "resin"):
-                    item["info"] = ("Sticky resin", "Perfect material to", "isolate something.", "", "", "")
-                elif item["item"] == ("unprocessed", "uranium"):
-                    item["info"] = ("Uranium ore", "Radioactive metal.", "Power source for this", "whole planet.", "", "")
-                elif item["item"] == ("ingot", "iron"):
-                    item["info"] = ("Iron ingot", "A heavy ingot that", "can be used in many", "ways.", "", "")
-                elif item["item"] == ("ingot", "copper"):
-                    item["info"] = ("Copper ingot", "One step from being a", "copper wire or a", "heat conduction pipe", "", "")
-                elif item["item"] == ("ingot", "tungsten"):
-                    item["info"] = ("Tungsten ingot", "Shiny electroconductive", "metal.", "", "", "")
-                elif item["item"] == ("ingot", "resin"):
-                    item["info"] = ("Resin sheet", "Used to make cables,", "fix-tape and some other", "electronics", "", "")
-                elif item["item"] == ("basic", "plate"):
-                    item["info"] = ("Iron plate", "Basic sheet of metal.", "Good for some basic", "buildings.", "", "")
-                elif item["item"] == ("basic", "rod"):
-                    item["info"] = ("Iron rod", "Supporting element in", "basic buildings", "", "", "")
-                elif item["item"] == ("basic", "screws"):
-                    item["info"] = ("Screws", "Very useful part.", "Can repair and be used", "in almost everything", "", "")
-                elif item["item"] == ("basic", "wire"):
-                    item["info"] = ("Copper wire", "Highly electroconductive", "wire. Used in basic electr-", "onics.", "", "")
-                elif item["item"] == ("basic", "cable"):
-                    item["info"] = ("Cable", "Isoalted wire. Used to", "transmit energy.", "", "", "")
-                elif item["item"] == ("bio", "fiber"):
-                    item["info"] = ("Biofiber", "Biological fiber, made out ", "of grass. Used to make", "textolite and BioUranium.", "", "")
-                elif item["item"] == ("basic", "drill"):
-                    item["info"] = ("Basic drill", "Can be used to build", "Electric drills mk.1-3", "", "", "")
-                elif item["item"] == ("uranium", "bio"):
-                    item["info"] = ("BioUranium fuel rod", "Not really radioactive,", "but produces a lot of", "energy.", "", "")
-                elif item["item"] == ("basic", "reinforced_plate"):
-                    item["info"] = ("Reinforced metal plate", "A better material to", "build higher tier", "buildings.", "", "")
-                elif item["item"] == ("wearables", "varu_glasses"):
-                    item["info"] = ("Hi-tech glasses", "Glasses, that let you", "see settings of things.", "Side effects: strong", "desire to paint every-.", "thing green")
-                elif item["item"] == ("basic","graphite_plate"):
-                    item["info"] = ("Graphite plate", "Material for basic", "electronics.", "", "", "")
-                elif item["item"] == ("electronics","chip"):
-                    item["info"] = ("Chip", "Computer chip,", "that can be programmed.", "", "", "")
-                elif item["item"] == ():
-                    item["info"] = ("", "", "", "", "", "")
+            
+            if "item" in item and item["item"] != {}:
+                itm_formated= str(item["item"]).replace('"',"'")              
+                item["info"] = descriptions[itm_formated]
         temp_new_blocks = []
         if game_mode == "singleplayer":
             for tile_id, tile in enumerate(world):
@@ -2419,7 +2083,7 @@ while 1:
 
                                 added = False
                                 for item_id, item in enumerate(inventory):
-                                    if "item" in item and item["item"] == ("basic", "wire") and item["amount"] < 200:
+                                    if "item" in item and item["item"] == ["basic", "wire"] and item["amount"] < 200:
                                         added = True
                                         break
                                 if not(added):
@@ -2431,7 +2095,7 @@ while 1:
                             elif building == "drill":
                                 added = False
                                 for item_id, item in enumerate(inventory):
-                                    if "item" in item and item["item"] == ("basic", "drill") and item["amount"] < 200:
+                                    if "item" in item and item["item"] == ["basic", "drill"] and item["amount"] < 200:
                                         added = True
                                         break
                                 if not(added):
@@ -2442,7 +2106,7 @@ while 1:
                                 if not(added): can_disassemble = False
                                 added = False
                                 for item_id, item in enumerate(inventory):
-                                    if "item" in item and item["item"] == ("basic", "wire") and item["amount"] < 200:
+                                    if "item" in item and item["item"] == ["basic", "wire"] and item["amount"] < 200:
                                         added = True
                                         break
                                 if not(added):
@@ -2453,7 +2117,7 @@ while 1:
                                 if not(added): can_disassemble = False
                                 added = False
                                 for item_id, item in enumerate(inventory):
-                                    if "item" in item and item["item"] == ("basic", "plate") and item["amount"] < 200:
+                                    if "item" in item and item["item"] == ["basic", "plate"] and item["amount"] < 200:
                                         added = True
                                         break
                                 if not(added):
@@ -2465,7 +2129,7 @@ while 1:
                             elif building == "smelter":
                                 added = False
                                 for item_id, item in enumerate(inventory):
-                                    if "item" in item and item["item"] == ("basic", "plate") and item["amount"] < 200:
+                                    if "item" in item and item["item"] == ["basic", "plate"] and item["amount"] < 200:
                                         added = True
                                         break
                                 if not(added):
@@ -2476,7 +2140,7 @@ while 1:
                                 if not(added): can_disassemble = False
                                 added = False
                                 for item_id, item in enumerate(inventory):
-                                    if "item" in item and item["item"] == ("basic", "wire") and item["amount"] < 200:
+                                    if "item" in item and item["item"] == ["basic", "wire"] and item["amount"] < 200:
                                         added = True
                                         break
                                 if not(added):
@@ -2487,7 +2151,7 @@ while 1:
                                 if not(added): can_disassemble = False
                                 added = False
                                 for item_id, item in enumerate(inventory):
-                                    if "item" in item and item["item"] == ("basic", "rod") and item["amount"] < 200:
+                                    if "item" in item and item["item"] == ["basic", "rod"] and item["amount"] < 200:
                                         added = True
                                         break
                                 if not(added):
@@ -2499,7 +2163,7 @@ while 1:
                             elif building == "storage_container":
                                 added = False
                                 for item_id, item in enumerate(inventory):
-                                    if "item" in item and item["item"] == ("basic", "plate") and item["amount"] < 200:
+                                    if "item" in item and item["item"] ==["basic", "plate"] and item["amount"] < 200:
                                         added = True
                                         break
                                 if not(added):
@@ -2510,7 +2174,7 @@ while 1:
                                 if not(added): can_disassemble = False
                                 added = False
                                 for item_id, item in enumerate(inventory):
-                                    if "item" in item and item["item"] == ("basic", "rod") and item["amount"] < 200:
+                                    if "item" in item and item["item"] == ["basic", "rod"] and item["amount"] < 200:
                                         inventory[item_id]["amount"] = inventory[item_id]["amount"] + 2
                                         added = True
                                         break
@@ -2649,139 +2313,139 @@ while 1:
 
                                     added = False
                                     for item_id, item in enumerate(inventory):
-                                        if "item" in item and item["item"] == ("basic", "wire") and item["amount"] < 200:
+                                        if "item" in item and item["item"] == ["basic", "wire"] and item["amount"] < 200:
                                             inventory[item_id]["amount"] = inventory[item_id]["amount"] + 10
                                             added = True
                                             break
                                     if not(added):
                                         for item_id, item in enumerate(inventory):
                                             if item == {}:
-                                                inventory[item_id] = {"item": ("basic", "plate"), "amount": 1}
+                                                inventory[item_id] = {"item": ["basic", "plate"], "amount": 1}
                                                 break                                        
                                 elif building == "drill":
                                     added = False
                                     for item_id, item in enumerate(inventory):
-                                        if "item" in item and item["item"] == ("basic", "drill") and item["amount"] < 200:
+                                        if "item" in item and item["item"] == ["basic", "drill"] and item["amount"] < 200:
                                             inventory[item_id]["amount"] = inventory[item_id]["amount"] + 1
                                             added = True
                                             break
                                     if not(added):
                                         for item_id, item in enumerate(inventory):
                                             if item == {}:
-                                                inventory[item_id] = {"item": ("basic", "drill"), "amount": 1}
+                                                inventory[item_id] = {"item": ["basic", "drill"], "amount": 1}
                                                 break
                                     added = False
                                     for item_id, item in enumerate(inventory):
-                                        if "item" in item and item["item"] == ("basic", "wire") and item["amount"] < 200:
+                                        if "item" in item and item["item"] == ["basic", "wire"] and item["amount"] < 200:
                                             inventory[item_id]["amount"] = inventory[item_id]["amount"] + 5
                                             added = True
                                             break
                                     if not(added):
                                         for item_id, item in enumerate(inventory):
                                             if item == {}:
-                                                inventory[item_id] = {"item": ("basic", "wire"), "amount": 5}
+                                                inventory[item_id] = {"item": ["basic", "wire"], "amount": 5}
                                                 break
                                     added = False
                                     for item_id, item in enumerate(inventory):
-                                        if "item" in item and item["item"] == ("basic", "plate") and item["amount"] < 200:
+                                        if "item" in item and item["item"] == ["basic", "plate"] and item["amount"] < 200:
                                             inventory[item_id]["amount"] = inventory[item_id]["amount"] + 3
                                             added = True
                                             break
                                     if not(added):
                                         for item_id, item in enumerate(inventory):
                                             if item == {}:
-                                                inventory[item_id] = {"item": ("basic", "plate"), "amount": 3}
+                                                inventory[item_id] = {"item": ["basic", "plate"], "amount": 3}
                                                 break                                        
                                 elif building == "smelter":
                                     added = False
                                     for item_id, item in enumerate(inventory):
-                                        if "item" in item and item["item"] == ("basic", "plate") and item["amount"] < 200:
+                                        if "item" in item and item["item"] == ["basic", "plate"] and item["amount"] < 200:
                                             inventory[item_id]["amount"] = inventory[item_id]["amount"] + 2
                                             added = True
                                             break
                                     if not(added):
                                         for item_id, item in enumerate(inventory):
                                             if item == {}:
-                                                inventory[item_id] = {"item": ("basic", "plate"), "amount": 2}
+                                                inventory[item_id] = {"item": ["basic", "plate"], "amount": 2}
                                                 break
                                     added = False
                                     for item_id, item in enumerate(inventory):
-                                        if "item" in item and item["item"] == ("basic", "wire") and item["amount"] < 200:
+                                        if "item" in item and item["item"] == ["basic", "wire"] and item["amount"] < 200:
                                             inventory[item_id]["amount"] = inventory[item_id]["amount"] + 10
                                             added = True
                                             break
                                     if not(added):
                                         for item_id, item in enumerate(inventory):
                                             if item == {}:
-                                                inventory[item_id] = {"item": ("basic", "wire"), "amount": 10}
+                                                inventory[item_id] = {"item": ["basic", "wire"], "amount": 10}
                                                 break
                                     added = False
                                     for item_id, item in enumerate(inventory):
-                                        if "item" in item and item["item"] == ("basic", "rod") and item["amount"] < 200:
+                                        if "item" in item and item["item"] == ["basic", "rod"] and item["amount"] < 200:
                                             inventory[item_id]["amount"] = inventory[item_id]["amount"] + 5
                                             added = True
                                             break
                                     if not(added):
                                         for item_id, item in enumerate(inventory):
                                             if item == {}:
-                                                inventory[item_id] = {"item": ("basic", "rod"), "amount": 3}
+                                                inventory[item_id] = {"item": ["basic", "rod"], "amount": 3}
                                                 break
                                 elif building == "crafter_lv1":
                                     added = False
                                     for item_id, item in enumerate(inventory):
-                                        if "item" in item and item["item"] == ("basic", "plate") and item["amount"] < 200:
+                                        if "item" in item and item["item"] == ["basic", "plate"] and item["amount"] < 200:
                                             inventory[item_id]["amount"] = inventory[item_id]["amount"] + 4
                                             added = True
                                             break
                                     if not(added):
                                         for item_id, item in enumerate(inventory):
                                             if item == {}:
-                                                inventory[item_id] = {"item": ("basic", "plate"), "amount": 4}
+                                                inventory[item_id] = {"item": ["basic", "plate"], "amount": 4}
                                                 break
                                     added = False
                                     for item_id, item in enumerate(inventory):
-                                        if "item" in item and item["item"] == ("basic", "wire") and item["amount"] < 200:
+                                        if "item" in item and item["item"] == ["basic", "wire"] and item["amount"] < 200:
                                             inventory[item_id]["amount"] = inventory[item_id]["amount"] + 5
                                             added = True
                                             break
                                     if not(added):
                                         for item_id, item in enumerate(inventory):
                                             if item == {}:
-                                                inventory[item_id] = {"item": ("basic", "wire"), "amount": 5}
+                                                inventory[item_id] = {"item": ["basic", "wire"], "amount": 5}
                                                 break
                                     added = False
                                     for item_id, item in enumerate(inventory):
-                                        if "item" in item and item["item"] == ("basic", "rod") and item["amount"] < 200:
+                                        if "item" in item and item["item"] == ["basic", "rod"] and item["amount"] < 200:
                                             inventory[item_id]["amount"] = inventory[item_id]["amount"] + 5
                                             added = True
                                             break
                                     if not(added):
                                         for item_id, item in enumerate(inventory):
                                             if item == {}:
-                                                inventory[item_id] = {"item": ("basic", "rod"), "amount": 3}
+                                                inventory[item_id] = {"item": ["basic", "rod"], "amount": 3}
                                                 break
                                 elif building == "storage_container":
                                     added = False
                                     for item_id, item in enumerate(inventory):
-                                        if "item" in item and item["item"] == ("basic", "plate") and item["amount"] < 200:
+                                        if "item" in item and item["item"] == ["basic", "plate"] and item["amount"] < 200:
                                             inventory[item_id]["amount"] = inventory[item_id]["amount"] + 5
                                             added = True
                                             break
                                     if not(added):
                                         for item_id, item in enumerate(inventory):
                                             if item == {}:
-                                                inventory[item_id] = {"item": ("basic", "plate"), "amount": 5}
+                                                inventory[item_id] = {"item": ["basic", "plate"], "amount": 5}
                                                 break
                                     added = False
                                     for item_id, item in enumerate(inventory):
-                                        if "item" in item and item["item"] == ("basic", "rod") and item["amount"] < 200:
+                                        if "item" in item and item["item"] == ["basic", "rod"] and item["amount"] < 200:
                                             inventory[item_id]["amount"] = inventory[item_id]["amount"] + 2
                                             added = True
                                             break
                                     if not(added):
                                         for item_id, item in enumerate(inventory):
                                             if item == {}:
-                                                inventory[item_id] = {"item": ("basic", "rod"), "amount": 2}
+                                                inventory[item_id] = {"item": ["basic", "rod"], "amount": 2}
                                                 break
 
                         if built:
@@ -2894,7 +2558,7 @@ while 1:
                         menu_tick = 10
                     elif world[x + y * world_len]["tile"] == "iron_ore":
                         for item_id, item in enumerate(inventory):
-                            if "item" in item and item["item"] == ("unprocessed", "iron") and item["amount"] < 200:
+                            if "item" in item and item["item"] == ["unprocessed", "iron"] and item["amount"] < 200:
                                 inventory[item_id]["amount"] += 1
                                 added = True
                                 player_state_timer = 15
@@ -2903,13 +2567,13 @@ while 1:
                         if not(added):
                             for item_id, item in enumerate(inventory):
                                 if item == {}:
-                                    inventory[item_id] = {"item": ("unprocessed", "iron"), "amount": 1, "info": ("Iron ore", "Iron, waiting to be", "melted. Can be transf-", "ormed to iron ingot.", "")}
+                                    inventory[item_id] = {"item": ["unprocessed", "iron"], "amount": 1}
                                     break
                             player_state_timer = 5
                             player_state = "dig_active"
                     elif world[x + y * world_len]["tile"] == "copper_ore":
                         for item_id, item in enumerate(inventory):
-                            if "item" in item and item["item"] == ("unprocessed", "copper") and item["amount"] < 200:
+                            if "item" in item and item["item"] == ["unprocessed", "copper"] and item["amount"] < 200:
                                 inventory[item_id]["amount"] += 1
                                 added = True
                                 player_state_timer = 5
@@ -2918,13 +2582,13 @@ while 1:
                         if not(added):
                             for item_id, item in enumerate(inventory):
                                 if item == {}:
-                                    inventory[item_id] = {"item": ("unprocessed", "copper"), "amount": 1, "info": ("Copper ore", "Copper, waiting to be", "melted. Can be transf-", "ormed to copper ingot.", "")}
+                                    inventory[item_id] = {"item": ["unprocessed", "copper"], "amount": 1}
                                     break
                             player_state_timer = 5
                             player_state = "dig_active"
                     elif world[x + y * world_len]["tile"] == "tungsten_ore":
                         for item_id, item in enumerate(inventory):
-                            if "item" in item and item["item"] == ("unprocessed", "tungsten") and item["amount"] < 200:
+                            if "item" in item and item["item"] == ["unprocessed", "tungsten"] and item["amount"] < 200:
                                 inventory[item_id]["amount"] += 1
                                 added = True
                                 player_state_timer = 5
@@ -2933,7 +2597,7 @@ while 1:
                         if not(added):
                             for item_id, item in enumerate(inventory):
                                 if item == {}:
-                                    inventory[item_id] = {"item": ("unprocessed", "tungsten"), "amount": 1, "info": ("Raw tungsten", "Raw metal that can glow.", "", "", "")}
+                                    inventory[item_id] = {"item": ["unprocessed", "tungsten"], "amount": 1}
                                     break
                             player_state_timer = 5
                             player_state = "dig_active"
@@ -2948,13 +2612,13 @@ while 1:
                         if not(added):
                             for item_id, item in enumerate(inventory):
                                 if item == {}:
-                                    inventory[item_id] = {"item": ("unprocessed", "coal"), "amount": 1, "info": ("Coal", "Natural material.", "Good for making steel.", "", "")}
+                                    inventory[item_id] = {"item": ["unprocessed", "coal"], "amount": 1}
                                     break
                             player_state_timer = 5
                             player_state = "dig_active"
                     elif world[x + y * world_len]["tile"] == "resin_ore":
                         for item_id, item in enumerate(inventory):
-                            if "item" in item and item["item"] == ("unprocessed", "resin") and item["amount"] < 200:
+                            if "item" in item and item["item"] == ["unprocessed", "resin"] and item["amount"] < 200:
                                 inventory[item_id]["amount"] += 1
                                 added = True
                                 player_state_timer = 5
@@ -2963,13 +2627,13 @@ while 1:
                         if not(added):
                             for item_id, item in enumerate(inventory):
                                 if item == {}:
-                                    inventory[item_id] = {"item": ("unprocessed", "resin"), "amount": 1, "info": ("Raw resin", "Natural material.", "Good for isolatin", "wires.", "")}
+                                    inventory[item_id] = {"item": ["unprocessed", "resin"], "amount": 1}
                                     break
                             player_state_timer = 5
                             player_state = "dig_active"
                     elif world[x + y * world_len]["tile"] == "uranium_ore":
                         for item_id, item in enumerate(inventory):
-                            if "item" in item and item["item"] == ("unprocessed", "uranium") and item["amount"] < 200:
+                            if "item" in item and item["item"] ==["unprocessed", "uranium"] and item["amount"] < 200:
                                 inventory[item_id]["amount"] += 1
                                 added = True
                                 player_state_timer = 5
@@ -2978,14 +2642,14 @@ while 1:
                         if not(added):
                             for item_id, item in enumerate(inventory):
                                 if item == {}:
-                                    inventory[item_id] = {"item": ("unprocessed", "uranium"), "amount": 1}
+                                    inventory[item_id] = {"item": ["unprocessed", "uranium"], "amount": 1}
 
                                     break
                             player_state_timer = 5
                             player_state = "dig_active"
                     elif world[x + y * world_len]["tile"] == "leaves":
                         for item_id, item in enumerate(inventory):
-                            if "item" in item and item["item"] == ("bio", "leaves") and item["amount"] < 500:
+                            if "item" in item and item["item"] == ["bio", "leaves"] and item["amount"] < 500:
                                 inventory[item_id]["amount"] += 1
                                 added = True
                                 world[x + y * world_len]["tile"] = "grass"
@@ -2996,7 +2660,7 @@ while 1:
                         if not(added) and len(inventory):
                             for item_id, item in enumerate(inventory):
                                 if item == {}:
-                                    inventory[item_id] = {"item": ("bio", "leaves"), "amount": 1, "info": ("Leaves", "Natural material, but", "has a little radiation in", "it. Can be transformed", "to Biofiber")}
+                                    inventory[item_id] = {"item": ["bio", "leaves"], "amount": 1}
                                     break
                             world[x + y * world_len]["tile"] = "grass"
                             temp_new_blocks.append({"id": x + (y * world_len), "tile": world[x + (y * world_len)]})

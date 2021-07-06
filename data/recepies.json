@@ -1,0 +1,168 @@
+{
+    "handmade":[
+        {
+             "name": "Iron ingot",
+             "required_text": "Iron ore",
+             "required": [[["unprocessed", "iron"], 1]],
+             "output":{"item": ["ingot", "iron"], "amount": 1}
+         },
+        {
+             "name": "Copper ingot",
+             "required_text": "Copper ore",
+             "required": [[["unprocessed", "copper"], 1]],
+             "output":{"item": ["ingot", "copper"], "amount": 1}
+          },
+         {
+             "name": "Tungsten ingot",
+             "required_text": "Tungsten ore",
+             "required": [[["unprocessed", "tungsten"], 1]],
+             "output":{"item": ["ingot", "tungsten"], "amount": 1}
+          },
+         {
+             "name": "Resin sheet",
+             "required_text": "Sticky resin x2",
+             "required": [[["unprocessed", "resin"], 2]],
+             "output":{"item": ["ingot", "resin"], "amount": 1}
+          },
+         {
+             "name": "Graphite plate",
+             "required_text": "Coal x2",
+             "required": [[["unprocessed", "coal"], 2]],
+             "output":{"item": ["basic", "graphite_plate"], "amount": 1}
+          },
+         {
+             "name": "Iron plate x3",
+             "required_text": "Iron ingot",
+             "required": [[["ingot", "iron"], 1]],
+             "output":{"item": ["basic", "plate"], "amount": 3}
+          },
+         {
+             "name": "Iron rod x2",
+             "required_text": "Iron ingot",
+             "required": [[["ingot", "iron"], 1]],
+             "output":{"item": ["basic", "rod"], "amount": 2}
+          },
+         {
+             "name": "Screws x10",
+             "required_text": "Iron ingot",
+             "required": [[["ingot", "iron"], 1]],
+             "output":{"item": ["basic", "screws"], "amount": 10}
+          },
+         {
+             "name": "Copper wire x5",
+             "required_text": "Copper ingot",
+             "required": [[["ingot", "copper"], 1]],
+             "output":{"item": ["basic", "wire"], "amount": 5}
+          },
+         {
+             "name": "Cable",
+             "required_text": ["Copper wire", "Rubber sheet"],
+             "required": [[["basic", "wire"], 1], [["ingot", "resin"], 1]],
+             "output":{"item": ["basic", "cable"], "amount": 1}
+          },
+         {
+             "name": "Portable drill",
+             "required_text": ["Iron plate x2", "Iron rod x3"],
+             "required": [[["basic", "plate"], 2], [["basic", "rod"], 3]],
+             "output":{"item": ["basic", "drill"], "amount": 1}
+          },
+         {
+             "name": "Biofiber x2",
+             "required_text": "Leaves x3",
+             "required": [[["bio", "leaves"], 3]],
+             "output":{"item": ["bio", "fiber"], "amount": 2}
+          },
+         {
+             "name": "BioUranium fuel rod x6",
+             "required_text": ["Biofiber x3", "Iron plate x5"],
+             "required": [[["bio", "fiber"], 3], [["basic", "plate"], 5]],
+             "output":{"item": ["uranium", "bio"], "amount": 6}
+          },
+         {
+             "name": "Chip x2",
+             "required_text": ["Graphite plate", "Copper wire"],
+             "required": [[["basic", "graphite_plate"], 1], [["basic", "wire"], 1]],
+             "output":{"item": ["electronics", "chip"], "amount": 2}
+          },
+         {
+             "name": "Hi-tech glasses",
+             "required_text": ["Iron plate x3", "Cable x2"],
+             "required": [[["basic", "cable"], 2], [["basic", "plate"], 3]],
+             "output":{"item": ["wearables", "varu_glasses"], "amount": 1}
+          }
+    ],
+    "smelter": [
+        {
+            "name": "Iron ingot",
+            "required_text": "Iron ore",
+            "required": [[["unprocessed", "iron"], 1]],
+            "output":{"item": ["ingot", "iron"], "amount": 1},
+            "time": 2
+        },
+        {
+            "name": "Copper ingot",
+            "required_text": "Copper ore",
+            "required": [[["unprocessed", "copper"], 1]],
+            "output":{"item": ["ingot", "copper"], "amount": 1},
+            "time": 2
+        },
+        {
+            "name": "Tungsten ingot",
+            "required_text": "Tungsten ore",
+            "required": [[["unprocessed", "tungsten"], 1]],
+            "output":{"item": ["ingot", "tungsten"], "amount": 1},
+            "time": 3
+        },
+        {
+            "name": "Resin sheet",
+            "required_text": "Sticky resin",
+            "required": [[["unprocessed", "resin"], 1]],
+            "output":{"item": ["ingot", "resin"], "amount": 1},
+            "time": 3
+        }
+    ],
+    "crafter_lv1": [
+        {
+            "name": "Graphite plate",
+            "required_text": "Coal x1",
+            "required": [[["unprocessed", "coal"], 1]],
+            "output":{"item": ["basic", "graphite_plate"], "amount": 1},
+            "time": 3
+        },
+        {
+            "name": "Iron plate x3",
+            "required_text": "Iron ingot",
+            "required": [[["ingot", "iron"], 1]],
+            "output":{"item": ["basic", "plate"], "amount": 3},
+            "time": 2
+        },
+        {
+            "name": "Iron rod x2",
+            "required_text": "Iron ingot",
+            "required": [[["ingot", "iron"], 1]],
+            "output":{"item": ["basic", "rod"], "amount": 2},
+            "time": 2
+        },
+        {
+            "name": "Screws x10",
+            "required_text": "Iron ingot",
+            "required": [[["ingot", "iron"], 1]],
+            "output":{"item": ["basic", "screws"], "amount": 10},
+            "time": 1
+        },
+        {
+            "name": "Copper wire x5",
+            "required_text": "Copper ingot",
+            "required": [[["ingot", "copper"], 1]],
+            "output":{"item": ["basic", "wire"], "amount": 5},
+            "time": 1
+        },
+        {
+            "name": "Biofiber x2",
+            "required_text": "Sticky resin",
+            "required": [[["unprocessed", "resin"], 1]],
+            "output":{"item": ["bio", "fiber"], "amount": 2},
+            "time": 4
+        }      
+    ]
+}

@@ -1,5 +1,3 @@
-# hint for Hardcore652 : go fix multiplayer
-
 import pygame as pg
 import sys
 import random
@@ -17,8 +15,6 @@ log_file = open(os.path.join("logs", "log-{}.txt".format(str(datetime.datetime.n
 log_file.write("[INFO] program started, time: {}\n".format(str(datetime.datetime.now())[:-7]))
 SPECIAL_YELLOW = (220, 184, 10)
 WINDOWS_BLUE = (0,0,168)
-ppc_power = 253
-ppc_batt = 1000
 game_mode = "title"
 selected = 0
 temp_new_blocks = []
@@ -70,15 +66,15 @@ openable = ["drill","storage_container"]+processors.copy()
     ("",""):0, 
 """
 item_costs = {
-    ("basic", "drill"): 30,
-    ("basic", "plate"): 3,
-    ("basic", "screws"): 12,
-    ("basic", "wire"): 7,
-    ("basic", "cable"): 10,
-    ("basic", "rod"): 5,
-    ("basic", "graphite_plate"): 5,
-    ("electronics", "chip"): 20,
-    ("uranium", "bio"): 35
+    "['basic', 'drill']": 30,
+    "['basic', 'plate']": 3,
+    "['basic', 'screws']": 12,
+    "['basic', 'wire']": 7,
+    "['basic', 'cable']": 10,
+    "['basic', 'rod']": 5,
+    "['basic', 'graphite_plate']": 5,
+    "['electronics', 'chip']": 20,
+    "['uranium', 'bio']": 35
 
 }
 with open(os.path.join("data","recepies.json")) as recepie_file:
@@ -253,18 +249,6 @@ player = {
 player["a"] = player["alphen"]
 player["f"] = player["fury"]
 
-deal_translations = {
-    ("basic", "plate"): "Iron plate",
-    ("basic", "rod"): "Iron rod",
-    ("basic", "wire"): "Copper wire",
-    ("basic", "drill"): "Basic drill",
-    ("basic", "screws"): "Screws",
-    ("basic", "cable"): "Cable",
-    ("basic", "graphite_plate"): "Graphite plate",
-    ("electronics", "chip"): "Chip",
-    ("uranium", "bio"): "BioUranium fuel rod",
-
-}
 
 resources = {
     "ingot": {
@@ -1506,7 +1490,7 @@ while 1:
             elif evt.type == pg.KEYDOWN:
 
                 keys = pg.key.get_pressed()
-                if keys[pg.K_m] and dialogue[0] == []:
+                if keys[pg.K_m] and dialogue[0] == [] and menu == "hidden" and not(chat_open):
                     if mode == "building":
                         player_state = "default"
                         mode = "!building"
@@ -2495,7 +2479,7 @@ while 1:
                 pos[0] += speed
                 facing = 1
         if menu_tick == 0 and not(chat_open):
-            if keys[pg.K_e] and menu == "hidden" and inventory_tile == "" and dialogue[0] == []:
+            if keys[pg.K_e] and menu == "hidden" and inventory_tile == "" and dialogue[0] == [] and mode == "!building":
                 menu = "opening"
                 menu_tick = 10
             elif keys[pg.K_e] and menu == "open" and inventory_tile == "" and dialogue[0] == []:

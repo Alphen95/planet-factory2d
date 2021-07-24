@@ -164,5 +164,37 @@
             "output":{"item": ["bio", "fiber"], "amount": 2},
             "time": 4
         }      
+    ],
+    "research":[
+        {
+            "name":"Automatization LV1",
+            "required_text":["Chip x10","Copper wire x50"],
+            "required":[[["electronics","chip"],10],[["basic","wire"],50]],
+            "output":"automatization_lv1",
+            "time":1
+        },
+        {
+            "name":"Organization",
+            "required_text":["Iron rod x 30","Iron plate x 45"],
+            "required":[[["electronics","chip"],10],[["basic","wire"],50]],
+            "output":"organization",
+            "time":1
+        }
+    ],
+    "crafter_lv2":[
+        {
+            "name": "Cable",
+            "required_text": ["Copper wire","Rubber sheet"],
+            "required": [[["basic", "wire"], 1],[["ingot","resin"],1]],
+            "output":{"item": ["basic", "cable"], "amount": 1},
+            "time": 2
+        },
+        {
+            "name": "Chip x1",
+            "required_text": ["Copper wire ","Graphite plate"],
+            "required": [[["basic", "wire"], 1],[["basic","graphite_plate"],1]],
+            "output":{"item": ["electronics", "chip"], "amount": 1},
+            "time": 4
+        }
     ]
 }

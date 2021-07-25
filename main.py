@@ -12,7 +12,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Planet Factory 2D is a game.')
 parser.add_argument('--skip_splash',type=bool,help='Skip intro cutscene.')
-VERSION = "0.7.4"
+VERSION = "0.8"
 effects = [(9, 9)] 
 world = []
 accelerate_timer = 0

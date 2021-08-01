@@ -12,7 +12,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Planet Factory 2D is a game.')
 parser.add_argument('--skip_splash',type=bool,help='Skip intro cutscene.')
-VERSION = "0.8"
+VERSION = "0.8.2"
 effects = [(9, 9)] 
 world = []
 accelerate_timer = 0
@@ -28,7 +28,6 @@ upd_blocks = []
 users = []
 offsets = [0,0]
 show_debug = False
-researches = ["automatization_lv1","organization"]
 cheat_mode = False
 action = ""
 player_speed = 5
@@ -57,9 +56,10 @@ show_taunt_menu = False
 args = parser.parse_args()
 game_mode = "splash" if not args.skip_splash else "title"
 release_notes = [
-    "PreRelease 0.8",
+    "Beta 0.8.2",
     "Automation Update Part 2",
-    "Polished probably everything and added a lot of stuff"
+    "Polished probably everything",
+    "and added a lot of stuff"
 
 ]
 
@@ -407,6 +407,8 @@ ground_tiles = [
     pg.image.load(os.path.join("res", "ground_tiles", "grass.png"))
 ]
 
+
+researches = ["automatization_lv1","organization"] if cheat_mode else []
 tick = 0
 tooltip_tick = -1
 tooltip_tile = {}
@@ -515,7 +517,7 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
                         except:
                             pass
                 elif block_part == 2:
-                    winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["drill"][1], 0), (cell_size, cell_size)), (x1 * cell_size+offsets[0], y1 * cell_size+offsets[1]))
+                    winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["drill"][1], block_rotation), (cell_size, cell_size)), (x1 * cell_size+offsets[0], y1 * cell_size+offsets[1]))
             elif block_building == "smelter":
                 if block_part == 1:
                     winobj.blit(pg.transform.scale(pg.transform.rotate(buildings["smelter"][0], block_rotation + 270), (cell_size, cell_size)), (x1 * cell_size+offsets[0], y1 * cell_size+offsets[1]))
@@ -718,8 +720,8 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
         winobj.blit(text_name, ((x1 - 1) * cell_size, (y1 - 1) * cell_size))
     if edit_mode:
         winobj.blit(pg.transform.scale(pg.transform.rotate(ui["ppc"], 0), (cell_size * 6, cell_size * 12)), (5, screen_size[1] + 10 - cell_size * 8))
-        if current_item != [] and current_item[0] != "":
-            if tick <= 22:
+        if current_item[0] != "":
+            if tick <= 29:
                 text_tile = dosfont.render(">ROTATE: [R]", True, (0, 0, 0))
                 text_tile2 = dosfont.render(">CURRENT_ROT", True, (0, 0, 0))
                 text_rot = dosfont.render(str(current_item[1]), True, (0, 0, 0))
@@ -1139,7 +1141,7 @@ def draw_world(world, winobj, tick, pos, tooltip_props, menu_props, edit_mode, p
         text_line0 = dosfontbig.render("10: {}".format(player[player_type]["gesture0"][2]["name"]), True, (0, 0, 0))
         winobj.blit(text_line0, (cell_size * 3.1, cell_size * 8.2)) #a
     if show_debug:
-        text_debug_info = dosfontbig.render("pos:{0} offsets:{1} speed:{2}".format(pos,offsets,speed), True, (0, 0, 0))
+        text_debug_info = dosfontbig.render("pos:{0} offsets:{1} speed:{2}".format(pos,offsets,speed), True, (255, 255, 255))
         winobj.blit(text_debug_info, (0, 0)) #a        
     pg.draw.rect(winobj, (200, 200, 200), (cell_size * 16, cell_size * 0, cell_size * 4, cell_size * 0.5))
     winobj.blit(pg.transform.scale(ui["save"], (cell_size// 2, cell_size// 2)), (cell_size*16, cell_size * 0))
@@ -1826,8 +1828,8 @@ while 1:
                 coords = evt.pos
                 # tooltip on middle-click
                 # build on left-click
-                x = int(coords[1] / cell_size)
-                y = int(coords[0] / cell_size)
+                x = int((coords[1]+offsets[0]) / cell_size)
+                y = int((coords[0]+offsets[1]) / cell_size)
                 x2 = 0
                 y2 = 0
                 x_borders = [pos[0] - 10, pos[0] + 10]
@@ -2059,12 +2061,8 @@ while 1:
                                     upd_blocks.append({"id": inventory_tile, "tile": world[inventory_tile]})
                                 x += 1
                     
-                    x = int(coords[0] / cell_size)
-                    y = int(coords[1] / cell_size) 
-                    if offsets[0] > 0: x+=1
-                    elif offsets[0] < 0: x-=1
-                    if offsets[1] > 0: y+=1
-                    elif offsets[1] < 0: y-=1                    
+                    x = int((coords[0]+offsets[0]) / cell_size)
+                    y = int((coords[1]+offsets[1]) / cell_size) 
                     if x_borders[0] < 0:
                         x -= abs(x_borders[0])
                     else:
@@ -2073,6 +2071,7 @@ while 1:
                         y -= abs(y_borders[0])
                     else:
                         y += y_borders[0]
+                    print(x,y)
                     if mode == "building" and current_item != [] and not(chat_open) and menu == "hidden" and current_item[0] != "" and dialogue[0] == []:
                         built = False
                         can_craft = False
@@ -2833,12 +2832,12 @@ while 1:
         if keys[pg.K_LSHIFT] and accelerate_timer == 0 and speed < 25:
             speed += 1
             accelerate_timer = 15
-        if keys[pg.K_DOWN] and pos[1] != 0 or keys[pg.K_s] and pos[1] != 0:
+        if keys[pg.K_DOWN] and pos[1] != world_len or keys[pg.K_s] and pos[1] != world_len:
             offsets[1] -= speed
             if offsets[1] <= -20:
                 offsets[1] = 20 - (offsets[1]+20) if 20 - (offsets[1]+20) < 26 else 25
                 pos[1] += 1
-        if keys[pg.K_UP] and pos[1] != world_len or keys[pg.K_w] and pos[1] != world_len:
+        if keys[pg.K_UP] and pos[1] != 0 or keys[pg.K_w] and pos[1] != 0:
             offsets[1] += speed
             if offsets[1] >= 20:
                 offsets[1] = -20 + (offsets[1]-20) if -20 + (offsets[1]-20) > -26 else 25   
